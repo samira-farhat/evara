@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../core/app_colors.dart';
 
 class IntroPageOne extends StatefulWidget {
   const IntroPageOne({Key? key}) : super(key: key);
@@ -21,7 +22,7 @@ class _IntroPageOneState extends State<IntroPageOne>
     // Smooth heartbeat loop for the sparkle and aura glow
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1600),
+      duration: Duration(milliseconds: 1600),
     )..repeat(reverse: true);
 
     // The sparkle inside scales up and down (beating effect)
@@ -58,24 +59,24 @@ class _IntroPageOneState extends State<IntroPageOne>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     // Balanced rose-purple blend: soft pinkish core transitioning into rich purple
-                    gradient: const RadialGradient(
+                    gradient: RadialGradient(
                       center: Alignment(0.0, 0.0),
                       radius: 0.85,
                       colors: [
-                        Color(0xFFE8D7F1), // Soft luminous pale rose-lavender core
-                        Color(0xFFB189DF), // Mid-tone balanced rosy-purple aura
-                        Color(0xFF6B3FA0), // Deep rich purple border edge
+                        AppColors.softLavender,
+                        AppColors.mediumLavender,
+                        AppColors.deepPurple,
                       ],
                       stops: [0.0, 0.55, 1.0],
                     ),
                     // Fine double ring border
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: AppColors.textPrimary.withValues(alpha: 0.5),
                       width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFC8A2C8).withValues(alpha: 0.35), // Soft amethyst glow shadow
+                        color: AppColors.amethystGlow.withValues(alpha: 0.35),
                         blurRadius: _glowAnimation.value,
                         spreadRadius: 2.5,
                       ),
@@ -91,7 +92,7 @@ class _IntroPageOneState extends State<IntroPageOne>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.25),
+                            color: AppColors.textPrimary.withValues(alpha: 0.25),
                             width: 1.0,
                           ),
                         ),
@@ -99,9 +100,9 @@ class _IntroPageOneState extends State<IntroPageOne>
                       // The Beating Sparkle Icon in the center
                       Transform.scale(
                         scale: _sparkleScaleAnimation.value,
-                        child: const Icon(
+                        child: Icon(
                           Icons.auto_awesome,
-                          color: Colors.white,
+                          color: AppColors.textPrimary,
                           size: 46,
                         ),
                       ),
@@ -111,29 +112,29 @@ class _IntroPageOneState extends State<IntroPageOne>
               },
             ),
 
-            const SizedBox(height: 70),
+            SizedBox(height: 70),
 
             // App Title
             Text(
               "Evara",
               style: GoogleFonts.cormorantGaramond(
-                color: Colors.white,
+                color: AppColors.textPrimary,
                 fontSize: 50,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 2.0,
               ),
             ),
 
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
 
             // Subtitle Description
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(horizontal: 40.0),
               child: Text(
                 "A bridge between who you were,\nwho you are, and who you intend\nto be.",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white54,
+                  color: AppColors.textSoft,
                   fontSize: 15.5,
                   height: 1.5,
                   fontWeight: FontWeight.w200,
@@ -141,7 +142,7 @@ class _IntroPageOneState extends State<IntroPageOne>
               ),
             ),
 
-            const SizedBox(height: 50),
+            SizedBox(height: 50),
           ],
         ),
       ),

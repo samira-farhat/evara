@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../core/app_colors.dart';
 
 
 class IntroPageTwo extends StatelessWidget {
@@ -8,7 +9,7 @@ class IntroPageTwo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      padding: EdgeInsets.symmetric(horizontal: 24.0),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -18,36 +19,44 @@ class IntroPageTwo extends StatelessWidget {
               child: Text(
                 "How it works",
                 style: GoogleFonts.cormorantGaramond(
-                  color: Colors.white,
+                  color: AppColors.textPrimary,
                   fontSize: 32,
                   fontWeight: FontWeight.w400,
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            const Center(
+
+            SizedBox(height: 8),
+
+            Center(
               child: Text(
                 "Three steps. One continuous conversation\nwith yourself.",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white38,
+                  color: AppColors.textMuted,
                   fontSize: 14,
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+
+            SizedBox(height: 32),
+
             _buildGlassFeatureCard(
               icon: Icons.lock_clock_rounded,
               title: "Capsules",
               description: "Capture moments, thoughts, and memories for your future self. Choose when they return — months or years from now.",
             ),
-            const SizedBox(height: 12),
+
+            SizedBox(height: 12),
+
             _buildGlassFeatureCard(
               icon: Icons.nightlight_round,
               title: "Reflection",
               description: "Reconnect with who you were, reflect on how you've changed, and leave a piece of yourself for who you'll become.",
             ),
-            const SizedBox(height: 12),
+
+            SizedBox(height: 12),
+
             _buildGlassFeatureCard(
               icon: Icons.auto_stories_rounded,
               title: "Life Chapters",
@@ -65,12 +74,12 @@ class IntroPageTwo extends StatelessWidget {
     required String description,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: AppColors.glassFill,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.15),
+          color: AppColors.glassBorder,
           width: 1.0,
         ),
       ),
@@ -78,31 +87,35 @@ class IntroPageTwo extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
+              color: AppColors.glassStrong,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: Colors.white, size: 22),
+            child: Icon(icon, color: AppColors.textPrimary, size: 22),
           ),
-          const SizedBox(width: 16),
+
+          SizedBox(width: 16),
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 4),
+
+                SizedBox(height: 4),
+
                 Text(
                   description,
-                  style: const TextStyle(
-                    color: Colors.white70,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
                     fontSize: 13,
                     height: 1.4,
                   ),

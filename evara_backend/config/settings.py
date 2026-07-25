@@ -37,6 +37,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    "rest_framework",
+    "corsheaders",
+
+    "users",
+    "capsules",
+    "chapters",
+    "reflections",
 ]
 
 MIDDLEWARE = [
@@ -47,6 +55,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    "corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -118,3 +128,27 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+AUTH_USER_MODEL = "users.User"
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+}
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+EMAIL_HOST = "smtp.gmail.com"
+
+EMAIL_PORT = 587
+
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = "theevaraapp@gmail.com"
+
+EMAIL_HOST_PASSWORD = "fcwb wtbx fzbc pwrz"

@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'app_colors.dart';
 
 class AppBackground extends StatelessWidget {
   final Widget child;
@@ -14,16 +15,16 @@ class AppBackground extends StatelessWidget {
         children: [
           // 1. Perfectly Smooth Blended Twilight-to-Sunset Gradient
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFF8B6FC0), // Soft luminous lavender top
-                  Color(0xFF6B4E9E), // Mid twilight purple
-                  Color(0xFF946294), // Smooth intermediate mauve bridge
-                  Color(0xFFC77D98), // Soft rosy pink blend
-                  Color(0xFFE89BAE), // Gentle sunset peach-pink bottom
+                  AppColors.lavender,
+                  AppColors.twilightPurple,
+                  AppColors.mauve,
+                  AppColors.rosePink,
+                  AppColors.peachPink,
                 ],
                 stops: [0.0, 0.3, 0.55, 0.8, 1.0], // Evenly distributed seamless stops
               ),
@@ -35,13 +36,13 @@ class AppBackground extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 gradient: RadialGradient(
-                  center: const Alignment(0.0, -0.35),
+                  center: Alignment(0.0, -0.35),
                   radius: 0.95,
                   colors: [
-                    Colors.white.withValues(alpha: 0.25), // Soft luminous highlight core
+                    AppColors.textPrimary.withValues(alpha: 0.25), // Soft luminous highlight core
                     Colors.transparent,
                   ],
-                  stops: const [0.0, 1.0],
+                  stops: [0.0, 1.0],
                 ),
               ),
             ),
@@ -77,7 +78,7 @@ class EtherealStardustPainter extends CustomPainter {
       final radius = random.nextDouble() * 1.2 + 0.4;
       final opacity = random.nextDouble() * 0.35 + 0.05;
 
-      paint.color = Colors.white.withValues(alpha: opacity);
+      paint.color = AppColors.textPrimary.withValues(alpha: opacity);
       canvas.drawCircle(Offset(x, y), radius, paint);
     }
   }

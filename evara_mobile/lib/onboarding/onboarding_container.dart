@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/app_background.dart';
+import '../core/app_colors.dart';
 import 'intro_page_one.dart';
 import 'intro_page_two.dart';
 import 'auth_page_three.dart';
@@ -23,13 +24,11 @@ class _OnboardingContainerState extends State<OnboardingContainer> {
 
   @override
   Widget build(BuildContext context) {
-    // The Scaffold needs transparent background so the gradient shows through
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: AppBackground( // Background is applied once here for the whole flow
+      body: AppBackground(
         child: Stack(
           children: [
-            // 1. The PageView sliding through the 3 screens
             PageView(
               controller: _pageController,
               onPageChanged: (index) {
@@ -37,25 +36,23 @@ class _OnboardingContainerState extends State<OnboardingContainer> {
                   _currentIndex = index;
                 });
               },
-              children: const [
-                IntroPageOne(), // Now perfectly centered
-                IntroPageTwo(), // Now perfectly centered
-                AuthPageThree(),// Now perfectly centered
+              children: [
+                IntroPageOne(),
+                IntroPageTwo(),
+                AuthPageThree(),
               ],
             ),
 
-            // 2. "Swipe to begin" indicator - POSITIONED PERMANENTLY AT BOTTOM
-            // We only show this on the first two pages, not the login page
             if (_currentIndex == 0)
               Positioned(
-                bottom: 45, // Slightly above the dots
+                bottom: 45,
                 left: 0,
                 right: 0,
-                child: const Center(
+                child: Center(
                   child: Text(
                     "Swipe to begin",
                     style: TextStyle(
-                      color: Colors.white60,
+                      color: AppColors.textSecondary,
                       fontSize: 13,
                       letterSpacing: 0.5,
                     ),
@@ -63,7 +60,6 @@ class _OnboardingContainerState extends State<OnboardingContainer> {
                 ),
               ),
 
-            // 3. Persistent Page Indicator Dots at the bottom overlay
             Positioned(
               bottom: 30,
               left: 0,
@@ -73,14 +69,14 @@ class _OnboardingContainerState extends State<OnboardingContainer> {
                 children: List.generate(3, (index) {
                   bool isActive = _currentIndex == index;
                   return AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                    duration: Duration(milliseconds: 300),
+                    margin: EdgeInsets.symmetric(horizontal: 4.0),
                     width: isActive ? 24.0 : 6.0,
                     height: 6.0,
                     decoration: BoxDecoration(
                       color: isActive
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: 0.3),
+                          ? AppColors.textPrimary
+                          : AppColors.textPrimary.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(3),
                     ),
                   );
