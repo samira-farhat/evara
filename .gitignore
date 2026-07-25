@@ -1,0 +1,20 @@
+# Flutter
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+
+# Android
+mobile/android/.gradle/
+
+# Django
+backend/__pycache__/
+backend/*.pyc
+backend/db.sqlite3
+
+# Environment
+.env
+
+# VS Code
+.vscode/
