@@ -28,6 +28,12 @@ class ApiConfig {
       "$auth/resend-otp/";
 
 
+  // Dashboard
+
+  static const String home =
+      "$baseUrl/home/";
+
+
 
 
 

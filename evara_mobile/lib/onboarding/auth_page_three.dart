@@ -5,8 +5,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import '../../core/api_config.dart';
 import '../core/app_colors.dart';
+import '../dashboard/dashboard_screen.dart';
 import 'forgot_password_screen.dart';
 import 'otp_verification_screen.dart';
+import '../services/token_storage.dart';
 
 class AuthPageThree extends StatefulWidget {
   const AuthPageThree({Key? key}) : super(key: key);
@@ -100,9 +102,21 @@ class _AuthPageThreeState extends State<AuthPageThree> {
         final data = jsonDecode(response.body);
 
         if (response.statusCode == 200) {
+
+          await TokenStorage.saveTokens(
+            access: data["access"],
+            refresh: data["refresh"],
+          );
+
           if (!mounted) return;
-          // TODO: Successfully logged in (Add your home navigation here)
-          debugPrint("Login Success");
+
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DashboardScreen(),
+            ),
+                (route) => false,
+          );
         } else {
           setState(() => _errorMessage = data["detail"] ?? data["error"] ?? "Invalid credentials.");
         }
