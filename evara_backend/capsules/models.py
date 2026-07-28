@@ -9,6 +9,7 @@ class Capsule(models.Model):
         ("memory", "Memory"),
         ("prediction", "Prediction"),
         ("accountability", "Accountability"),
+        ("letter", "Letter"),
     ]
 
 
@@ -48,6 +49,17 @@ class Capsule(models.Model):
 
     unlock_date = models.DateTimeField()
 
+    recipient_name = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    recipient_email = models.EmailField(
+        blank=True,
+        null=True
+    )
+
 
     prediction_text = models.TextField(
         blank=True,
@@ -77,6 +89,14 @@ class Capsule(models.Model):
         null=True
     )
 
+    is_delivered = models.BooleanField(
+        default=False
+    )
+
+    delivered_at = models.DateTimeField(
+        blank=True,
+        null=True
+    )
 
     created_at = models.DateTimeField(
         auto_now_add=True
@@ -86,6 +106,9 @@ class Capsule(models.Model):
     updated_at = models.DateTimeField(
         auto_now=True
     )
+
+    def __str__(self):
+        return self.title
 
 
 

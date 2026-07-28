@@ -6,16 +6,18 @@ from .views import CapsuleViewSet, AttachmentViewSet
 
 router = DefaultRouter()
 
-router.register(
-    "",
-    CapsuleViewSet,
-    basename="capsule"
-)
 
 router.register(
     "attachments",
     AttachmentViewSet,
     basename="attachment"
+)
+
+
+router.register(
+    "",
+    CapsuleViewSet,
+    basename="capsule"
 )
 
 

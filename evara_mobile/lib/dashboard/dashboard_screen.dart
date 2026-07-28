@@ -19,7 +19,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   final List<Widget> _screens = [
     const HomeTab(),
-    const CreateTab(),
     const LibraryTab(),
     const ChaptersTab(),
     const ProfileTab(),
@@ -38,13 +37,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _onTabTapped(int index) {
+    if (index == 1) {
+      _openCreateBottomSheet();
+      return;
+    }
+
+    int screenIndex = index > 1 ? index - 1 : index;
+
     setState(() {
       _currentIndex = index;
     });
-    _pageController.animateToPage(
-      index,
-      duration: Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+
+    _pageController.jumpToPage(screenIndex);
+  }
+
+  void _openCreateBottomSheet() {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        barrierColor: Colors.black.withValues(alpha: 0.6),
+        barrierDismissible: true,
+        transitionDuration: Duration(milliseconds: 350),
+        reverseTransitionDuration: Duration(milliseconds: 250),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return CapsuleCreationSlideScreen(
+            onClose: () {
+              Navigator.of(context).pop();
+            },
+          );
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final slideAnimation = Tween<Offset>(
+            begin: Offset(0, 1),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+          return SlideTransition(position: slideAnimation, child: child);
+        },
+      ),
     );
   }
 
@@ -56,9 +85,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           PageView(
             controller: _pageController,
+            physics: NeverScrollableScrollPhysics(),
             onPageChanged: (index) {
+              int navIndex = index >= 1 ? index + 1 : index;
               setState(() {
-                _currentIndex = index;
+                _currentIndex = navIndex;
               });
             },
             children: _screens,

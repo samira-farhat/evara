@@ -10,6 +10,8 @@ from .views import (
     ResendOTPView,
 )
 
+from rest_framework_simplejwt.views import TokenRefreshView
+
 urlpatterns = [
 
     path(
@@ -48,6 +50,12 @@ urlpatterns = [
         "resend-otp/",
         ResendOTPView.as_view(),
         name="resend-otp",
+    ),
+
+    path(
+        "token/refresh/",
+        TokenRefreshView.as_view(),
+        name="token-refresh"
     ),
 
 ]

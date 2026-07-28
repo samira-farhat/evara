@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 
 from .models import Capsule, Attachment
@@ -6,7 +6,6 @@ from .serializers import (
     CapsuleSerializer,
     AttachmentSerializer
 )
-
 
 
 class CapsuleViewSet(viewsets.ModelViewSet):
@@ -30,8 +29,12 @@ class CapsuleViewSet(viewsets.ModelViewSet):
 
 
 
-
-class AttachmentViewSet(viewsets.ModelViewSet):
+class AttachmentViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
 
     serializer_class = AttachmentSerializer
     permission_classes = [IsAuthenticated]

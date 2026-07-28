@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/app_colors.dart';
 import '../../../../core/api_config.dart';
 import '../../../../core/api_client.dart';
+import 'create_tab.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({Key? key}) : super(key: key);
@@ -49,6 +50,51 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
     _fetchHomeData();
   }
 
+  IconData _getCapsuleTypeIcon(String type) {
+    switch (type) {
+      case "prediction":
+        return Icons.nightlight_round_outlined;
+
+      case "accountability":
+        return Icons.track_changes_rounded;
+
+      case "letter":
+        return Icons.favorite_border_rounded;
+
+      case "memory":
+      default:
+        return Icons.auto_awesome_rounded;
+    }
+  }
+
+  void _openCreateBottomSheet(String? initialType) {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        barrierColor: Colors.black.withValues(alpha: 0.6),
+        barrierDismissible: true,
+        transitionDuration: const Duration(milliseconds: 350),
+        reverseTransitionDuration: const Duration(milliseconds: 250),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return CapsuleCreationSlideScreen(
+            initialType: initialType,
+            onClose: () {
+              Navigator.of(context).pop();
+              _fetchHomeData(); // Refresh data after creating a capsule
+            },
+          );
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final slideAnimation = Tween<Offset>(
+            begin: const Offset(0, 1),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+          return SlideTransition(position: slideAnimation, child: child);
+        },
+      ),
+    );
+  }
+
   Future<void> _fetchHomeData() async {
     setState(() {
       _isLoading = true;
@@ -60,6 +106,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+
         setState(() {
           _greeting = data['greeting'] ?? "Hello";
           _username = data['username'] ?? "";
@@ -426,35 +473,35 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
           physics: NeverScrollableScrollPhysics(),
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
-          // Adjusted aspect ratio so smaller phone screens (like iPhone SE/12 Pro) don't overflow
           childAspectRatio: 2.1,
           children: [
             _buildQuickCreateCard(
               title: "Capsule",
               subtitle: "Preserve a moment",
-              icon: Icons.widgets_outlined,
+              icon: Icons.auto_awesome_rounded,
               color: AppColors.lavender,
-              onTap: () {
-                // TODO: Navigate to Capsule Create screen
-              },
+              onTap: () => _openCreateBottomSheet('memory'),
             ),
             _buildQuickCreateCard(
               title: "Prediction",
               subtitle: "Guess the future",
               icon: Icons.nightlight_round_outlined,
               color: AppColors.twilightPurple,
-              onTap: () {
-                // TODO: Navigate to Prediction Create screen
-              },
+              onTap: () => _openCreateBottomSheet('prediction'),
             ),
             _buildQuickCreateCard(
               title: "Accountability",
               subtitle: "Commit to a goal",
               icon: Icons.track_changes_rounded,
               color: AppColors.rosePink,
-              onTap: () {
-                // TODO: Navigate to Accountability Create screen
-              },
+              onTap: () => _openCreateBottomSheet('accountability'),
+            ),
+            _buildQuickCreateCard(
+              title: "Letter",
+              subtitle: "Send to someone",
+              icon: Icons.favorite_border_rounded,
+              color: AppColors.mauve,
+              onTap: () => _openCreateBottomSheet('letter'),
             ),
           ],
         ),
@@ -530,7 +577,12 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
 
 
   Widget _buildUpcomingCapsulesSection() {
-    bool hasCapsules = _upcomingCapsules.isNotEmpty;
+    // Filter out letter capsules so they don't show up here
+    final filteredCapsules = _upcomingCapsules
+        .where((c) => (c['capsule_type'] ?? 'memory') != 'letter')
+        .toList();
+
+    bool hasCapsules = filteredCapsules.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -565,7 +617,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
 
         SizedBox(height: 16),
 
-        hasCapsules ? _buildPopulatedCapsulesList() : _buildEmptyCapsulesState(),
+        hasCapsules ? _buildPopulatedCapsulesList(filteredCapsules) : _buildEmptyCapsulesState(),
       ],
     );
   }
@@ -610,18 +662,25 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget _buildPopulatedCapsulesList() {
+  Widget _buildPopulatedCapsulesList(List<dynamic> capsulesList) {
     return ListView.separated(
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
-      itemCount: _upcomingCapsules.length,
+      itemCount: capsulesList.length,
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        final capsule = _upcomingCapsules[index];
+        final capsule = capsulesList[index];
         final title = capsule['title'] ?? 'Untitled';
 
         final rawType = capsule['capsule_type'] ?? 'memory';
-        final formattedType = '${rawType[0].toUpperCase()}${rawType.substring(1)} Capsule';
+        String formattedType = 'Memory Capsule';
+        if (rawType == 'prediction') {
+          formattedType = 'Prediction Capsule';
+        } else if (rawType == 'accountability') {
+          formattedType = 'Accountability Capsule';
+        } else {
+          formattedType = '${rawType[0].toUpperCase()}${rawType.substring(1)} Capsule';
+        }
 
         final daysRemaining = capsule['days_remaining'] ?? 0;
         final timeAgoText = '${daysRemaining} days';
@@ -684,7 +743,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
 
                       Row(
                         children: [
-                          Icon(Icons.auto_awesome_rounded, color: Colors.black.withValues(alpha: 0.3), size: 14),
+                          Icon( _getCapsuleTypeIcon(rawType), color: Colors.black.withValues(alpha: 0.3), size: 14),
 
                           SizedBox(width: 6),
 
@@ -825,7 +884,9 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
         final chapter = _activeChapters[index];
         final title = chapter['title'] ?? 'Untitled';
         final capsuleCount = chapter['capsule_count'] ?? 0;
-        final imageUrl = chapter['cover_image'];
+        final imageUrl = ApiConfig.buildMediaUrl(
+          chapter['cover_image'],
+        );
 
         return GestureDetector(
           onTap: () {
@@ -843,7 +904,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: imageUrl != null && imageUrl.toString().isNotEmpty
+                  child: imageUrl.isNotEmpty
                       ? Image.network(
                     imageUrl,
                     height: 140,

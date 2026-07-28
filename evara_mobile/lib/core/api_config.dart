@@ -1,40 +1,86 @@
+import 'package:flutter/foundation.dart';
+
 class ApiConfig {
 
-  static const String baseUrl =
-      "http://127.0.0.1:8000/api";
+  static String get baseUrl {
+    if (kIsWeb) {
+      return "http://localhost:8000/api";
+    }
+
+    return "http://10.0.2.2:8000/api";
+  }
+
+
+  // for images
+  static String get mediaBaseUrl {
+    if (kIsWeb) {
+      return "http://localhost:8000";
+    }
+
+    return "http://10.0.2.2:8000";
+  }
+
+
+  static String buildMediaUrl(String? path) {
+    if (path == null || path.isEmpty) {
+      return "";
+    }
+
+    if (path.startsWith("http")) {
+      return path;
+    }
+
+    return "$mediaBaseUrl$path";
+  }
+
 
   // Auth
-  static const String auth = "$baseUrl/auth";
 
-  static const String register =
+  static String get auth => "$baseUrl/auth";
+
+  static String get refreshToken =>
+      "$auth/token/refresh/";
+
+  static String get register =>
       "$auth/register/";
 
-  static const String login =
+  static String get login =>
       "$auth/login/";
 
-  static const String verifyEmail =
+  static String get verifyEmail =>
       "$auth/verify-email/";
 
-  static const String forgotPassword =
+  static String get forgotPassword =>
       "$auth/forgot-password/";
 
-  static const String verifyResetOtp =
+  static String get verifyResetOtp =>
       "$auth/verify-reset-otp/";
 
-  static const String resetPassword =
+  static String get resetPassword =>
       "$auth/reset-password/";
 
-  static const String resendOtp =
+  static String get resendOtp =>
       "$auth/resend-otp/";
 
 
   // Dashboard
 
-  static const String home =
+  static String get home =>
       "$baseUrl/home/";
 
 
+  // Capsules
+
+  static String get capsules =>
+      "$baseUrl/capsules/";
 
 
+  static String get attachments =>
+      "${capsules}attachments/";
 
+
+  // Chapters
+
+  static String get chapters =>
+      "$baseUrl/chapters/";
 }
