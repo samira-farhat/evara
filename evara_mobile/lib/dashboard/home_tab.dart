@@ -4,10 +4,13 @@ import 'package:intl/intl.dart';
 import '../../../../core/app_colors.dart';
 import '../../../../core/api_config.dart';
 import '../../../../core/api_client.dart';
+import '../core/app_background.dart';
 import 'create_tab.dart';
 
 class HomeTab extends StatefulWidget {
-  const HomeTab({Key? key}) : super(key: key);
+  final VoidCallback? onViewReadyCapsules;
+
+  const HomeTab({Key? key, this.onViewReadyCapsules}) : super(key: key);
 
   @override
   State<HomeTab> createState() => _HomeTabState();
@@ -26,6 +29,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
 
   int _pastCapsulesCount = 0;
   int _futureCapsulesCount = 0;
+  int _readyCapsulesCount = 0;
   int _yearsSpan = 1;
 
   List<dynamic> _upcomingCapsules = [];
@@ -114,6 +118,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
           final timeline = data['timeline_summary'] ?? {};
           _pastCapsulesCount = timeline['past_capsules_count'] ?? 0;
           _futureCapsulesCount = timeline['future_capsules_count'] ?? 0;
+          _readyCapsulesCount = timeline['ready_capsules_count'] ?? 0;
           _yearsSpan = timeline['years_span'] ?? 1;
           if (_yearsSpan < 1) _yearsSpan = 1;
 
@@ -197,6 +202,13 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
 
                 // 2. Timeline Box
                 _buildTimelineWidget(),
+
+                // 2.5 Ready Capsules Card (Appears only if ready_capsules_count > 0)
+                if (_readyCapsulesCount > 0) ...[
+                  SizedBox(height: 24),
+                  _buildReadyCapsulesBanner(),
+                ],
+
                 SizedBox(height: 40),
 
                 // 3. Quick Create Section
@@ -414,6 +426,126 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildReadyCapsulesBanner() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.deepPurple.withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          children: [
+            // 1. Richer, saturated multi-color gradient (Using deeper color stops on edges)
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.twilightPurple,
+                    AppColors.mauve,
+                    AppColors.rosePink,
+                    AppColors.deepPurple,
+                  ],
+                  stops: [0.0, 0.35, 0.7, 1.0],
+                ),
+              ),
+            ),
+
+            // 2. Uniform dark atmospheric filter to make colors punchy and vibrant across the whole box
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.deepPurple.withValues(alpha: 0.35),
+                ),
+              ),
+            ),
+
+            // 3. Stardust / Sparkle custom painter overlay
+            Positioned.fill(
+              child: CustomPaint(
+                painter: EtherealStardustPainter(),
+              ),
+            ),
+
+            // 4. Content Foreground Layout
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Ready for you",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                blurRadius: 4,
+                                offset: Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          "$_readyCapsulesCount ${_readyCapsulesCount == 1 ? 'capsule has' : 'capsules have'} been delivered.",
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.95),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _readyCapsulesCount = 0; // Hides card immediately upon click
+                      });
+                      widget.onViewReadyCapsules?.call();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppColors.deepPurple,
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 2,
+                    ),
+                    child: Text(
+                      "View",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -743,7 +875,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
 
                       Row(
                         children: [
-                          Icon( _getCapsuleTypeIcon(rawType), color: Colors.black.withValues(alpha: 0.3), size: 14),
+                          Icon( _getCapsuleTypeIcon(rawType), color: capsuleColor, size: 14),
 
                           SizedBox(width: 6),
 

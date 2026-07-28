@@ -74,6 +74,8 @@ class ApiConfig {
   static String get capsules =>
       "$baseUrl/capsules/";
 
+  static String get capsuleLibrary =>
+      "${capsules}library/";
 
   static String get attachments =>
       "${capsules}attachments/";

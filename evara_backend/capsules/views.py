@@ -1,11 +1,18 @@
+from django.utils import timezone
 from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 
 from .models import Capsule, Attachment
 from .serializers import (
     CapsuleSerializer,
-    AttachmentSerializer
+    AttachmentSerializer,
+    CapsuleLibrarySerializer
 )
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
+from django.db.models import Q
 
 
 class CapsuleViewSet(viewsets.ModelViewSet):
@@ -45,3 +52,117 @@ class AttachmentViewSet(
         return Attachment.objects.filter(
             capsule__user=self.request.user
         )
+
+
+class CapsuleLibraryAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+
+    def get(self, request):
+
+        capsules = Capsule.objects.filter(
+            user=request.user
+        )
+
+
+        # -----------------
+        # Search
+        # -----------------
+
+        search = request.query_params.get("search")
+
+        if search:
+
+            capsules = capsules.filter(
+                Q(title__icontains=search)
+                |
+                Q(chapter__title__icontains=search)
+            )
+
+
+        # -----------------
+        # Type filter
+        # -----------------
+
+        capsule_type = request.query_params.get("type")
+
+        if capsule_type:
+
+            capsules = capsules.filter(
+                capsule_type=capsule_type
+            )
+
+
+        # -----------------
+        # Status filter
+        # -----------------
+
+        status = request.query_params.get("status")
+
+        if status == "locked":
+
+            capsules = capsules.filter(
+                unlock_date__gt=timezone.now()
+            )
+
+
+        elif status == "unlocked":
+
+            capsules = capsules.filter(
+                unlock_date__lte=timezone.now()
+            )
+
+
+        # -----------------
+        # Sorting
+        # -----------------
+
+        sort = request.query_params.get("sort")
+
+
+        if sort == "newest":
+
+            capsules = capsules.order_by(
+                "-created_at"
+            )
+
+
+        elif sort == "oldest":
+
+            capsules = capsules.order_by(
+                "created_at"
+            )
+
+
+        elif sort == "unlock_soonest":
+
+            capsules = capsules.order_by(
+                "unlock_date"
+            )
+
+
+        elif sort == "unlock_latest":
+
+            capsules = capsules.order_by(
+                "-unlock_date"
+            )
+
+
+        else:
+
+            capsules = capsules.order_by(
+                "-created_at"
+            )
+
+
+        serializer = CapsuleLibrarySerializer(
+            capsules,
+            many=True
+        )
+
+
+        return Response({
+            "count": capsules.count(),
+            "capsules": serializer.data
+        })

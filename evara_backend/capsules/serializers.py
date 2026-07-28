@@ -99,3 +99,41 @@ class CapsuleSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+
+
+class CapsuleLibrarySerializer(serializers.ModelSerializer):
+
+    chapter_title = serializers.CharField(
+        source="chapter.title",
+        read_only=True
+    )
+
+
+    status = serializers.SerializerMethodField()
+
+
+    def get_status(self, obj):
+
+        from django.utils import timezone
+
+        if obj.unlock_date <= timezone.now():
+            return "unlocked"
+
+        return "locked"
+
+
+
+    class Meta:
+
+        model = Capsule
+
+        fields = [
+            "id",
+            "title",
+            "capsule_type",
+            "chapter_title",
+            "unlock_date",
+            "created_at",
+            "status",
+        ]

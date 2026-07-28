@@ -17,12 +17,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
   late final PageController _pageController;
 
-  final List<Widget> _screens = [
-    const HomeTab(),
-    const LibraryTab(),
+  String _libraryInitialFilter = 'all';
+
+  late final List<Widget> _screens = [
+    HomeTab(
+      onViewReadyCapsules: () => _navigateToLibraryWithFilter('unlocked'),
+    ),
+    LibraryTab(key: ValueKey(_libraryInitialFilter), initialFilter: _libraryInitialFilter),
     const ChaptersTab(),
     const ProfileTab(),
   ];
+
+  void _navigateToLibraryWithFilter(String filter) {
+    setState(() {
+      _libraryInitialFilter = filter;
+      _screens[1] = LibraryTab(key: ValueKey(_libraryInitialFilter), initialFilter: _libraryInitialFilter);
+      _currentIndex = 2;
+    });
+    _pageController.jumpToPage(1);
+  }
 
   @override
   void initState() {
@@ -39,6 +52,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _onTabTapped(int index) {
     if (index == 1) {
       _openCreateBottomSheet();
+      return;
+    }
+
+    if (index == 2) {
+      _navigateToLibraryWithFilter('all');
       return;
     }
 

@@ -60,6 +60,16 @@ class HomeDashboardAPIView(APIView):
         ).count()
 
 
+        # -------------------------
+        # Ready Capsules
+        # -------------------------
+
+        ready_capsules_count = Capsule.objects.filter(
+            user=user,
+            is_delivered=True
+        ).count()
+
+
 
         years_span = 0
 
@@ -175,6 +185,10 @@ class HomeDashboardAPIView(APIView):
 
                 "future_capsules_count":
                     future_capsules_count,
+
+
+                "ready_capsules_count":
+                    ready_capsules_count,
 
 
                 "years_span":
