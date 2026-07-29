@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import '../../../../core/app_colors.dart';
 import '../../../../core/api_config.dart';
 import '../../../../core/api_client.dart';
+import '../screens/chapter_details_screen.dart';
 
 class ChaptersTab extends StatefulWidget {
   const ChaptersTab({Key? key}) : super(key: key);
@@ -555,8 +556,14 @@ class _ChaptersTabState extends State<ChaptersTab> {
     final coverImage = chapter['cover_image'] != null ? ApiConfig.buildMediaUrl(chapter['cover_image']) : null;
 
     return GestureDetector(
-      onTap: () {
-        // TODO: Navigate to Chapter Details screen (Edit, Delete, and inner contents)
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChapterDetailsScreen(chapterId: chapter['id']),
+          ),
+        );
+        _fetchChapters();
       },
       child: Container(
         padding: EdgeInsets.all(16),
@@ -668,6 +675,7 @@ class _CreateChapterBottomSheetState extends State<_CreateChapterBottomSheet> {
   final TextEditingController _descriptionController = TextEditingController();
   XFile? _selectedImage;
   bool _isSubmitting = false;
+  String? _titleErrorMessage;
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -681,11 +689,15 @@ class _CreateChapterBottomSheetState extends State<_CreateChapterBottomSheet> {
 
   Future<void> _submitChapter() async {
     if (_titleController.text.trim().isEmpty) {
+      setState(() {
+        _titleErrorMessage = "Chapter title cannot be empty.";
+      });
       return;
     }
 
     setState(() {
       _isSubmitting = true;
+      _titleErrorMessage = null;
     });
 
     try {
@@ -714,23 +726,37 @@ class _CreateChapterBottomSheetState extends State<_CreateChapterBottomSheet> {
       if (response.statusCode == 201 || response.statusCode == 200) {
         Navigator.pop(context);
         widget.onChapterCreated();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Chapter created successfully!")),
+        );
       } else {
         setState(() {
           _isSubmitting = false;
         });
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to create chapter. Please try again.")),
-        );
+
+        // Parse Django error response safely
+        String errorMessage = "Failed to create chapter. Please try again.";
+        try {
+          final errorData = jsonDecode(response.body);
+          if (errorData is Map && errorData.containsKey('title')) {
+            final titleErrors = errorData['title'];
+            if (titleErrors is List && titleErrors.isNotEmpty) {
+              errorMessage = titleErrors[0].toString();
+            } else if (titleErrors is String) {
+              errorMessage = titleErrors;
+            }
+          }
+        } catch (_) {}
+
+        setState(() {
+          _titleErrorMessage = errorMessage;
+        });
       }
     } catch (e) {
       setState(() {
         _isSubmitting = false;
+        _titleErrorMessage = "Connection error during chapter creation.";
       });
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Connection error during chapter creation.")),
-      );
     }
   }
 
@@ -766,17 +792,32 @@ class _CreateChapterBottomSheetState extends State<_CreateChapterBottomSheet> {
                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.black),
                 ),
 
-                TextButton(
+                OutlinedButton(
                   onPressed: _isSubmitting ? null : _submitChapter,
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: AppColors.twilightPurple,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.twilightPurple,
+                    side: BorderSide(color: AppColors.twilightPurple, width: 1.5),
+                    backgroundColor: AppColors.twilightPurple.withValues(alpha: 0.08),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   ),
                   child: _isSubmitting
-                      ? SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : Text("Save", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      ? SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      color: AppColors.twilightPurple,
+                      strokeWidth: 2,
+                    ),
+                  )
+                      : Text(
+                    "Save",
+                    style: TextStyle(
+                      color: AppColors.twilightPurple,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -873,45 +914,61 @@ class _CreateChapterBottomSheetState extends State<_CreateChapterBottomSheet> {
 
             SizedBox(height: 20),
 
-            // Chapter Title Input
+            // Chapter Title Label & Input
             Text(
               "CHAPTER NAME",
               style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black54, letterSpacing: 0.5),
             ),
-
             SizedBox(height: 8),
-
             Container(
               decoration: BoxDecoration(
-                color: Colors.grey.shade50,
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(
+                  color: _titleErrorMessage != null ? Colors.redAccent : Colors.grey.shade200,
+                  width: _titleErrorMessage != null ? 1.5 : 1.0,
+                ),
               ),
               child: TextField(
                 controller: _titleController,
+                onChanged: (_) {
+                  if (_titleErrorMessage != null) {
+                    setState(() {
+                      _titleErrorMessage = null;
+                    });
+                  }
+                },
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black87),
                 decoration: InputDecoration(
-                  hintText: "e.g., University Years",
-                  hintStyle: TextStyle(color: Colors.black38),
+                  hintText: "e.g. University Years",
+                  hintStyle: TextStyle(color: Colors.black38, fontSize: 14),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
               ),
             ),
+            if (_titleErrorMessage != null) ...[
+              SizedBox(height: 6),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: Text(
+                  _titleErrorMessage!,
+                  style: TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ],
 
             SizedBox(height: 16),
 
-            // Description Input
+            // Description Label & Input
             Text(
               "DESCRIPTION (OPTIONAL)",
               style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black54, letterSpacing: 0.5),
             ),
-
             SizedBox(height: 8),
-
             Container(
               decoration: BoxDecoration(
-                color: Colors.grey.shade50,
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.grey.shade200),
               ),
@@ -920,8 +977,8 @@ class _CreateChapterBottomSheetState extends State<_CreateChapterBottomSheet> {
                 maxLines: 3,
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black87),
                 decoration: InputDecoration(
-                  hintText: "What is this chapter about?",
-                  hintStyle: TextStyle(color: Colors.black38),
+                  hintText: "What was this chapter about?",
+                  hintStyle: TextStyle(color: Colors.black38, fontSize: 14),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),

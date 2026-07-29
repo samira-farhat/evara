@@ -5,6 +5,7 @@ import '../../../../core/app_colors.dart';
 import '../../../../core/api_config.dart';
 import '../../../../core/api_client.dart';
 import '../core/app_background.dart';
+import '../screens/chapter_details_screen.dart' hide EtherealStardustPainter;
 import 'create_tab.dart';
 
 class HomeTab extends StatefulWidget {
@@ -1022,7 +1023,17 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
 
         return GestureDetector(
           onTap: () {
-            // TODO: Navigate to Chapter Details screen
+            final chapterId = chapter['id'];
+            if (chapterId != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChapterDetailsScreen(chapterId: chapterId),
+                ),
+              ).then((_) {
+                _fetchHomeData();
+              });
+            }
           },
           child: Container(
             width: double.infinity,

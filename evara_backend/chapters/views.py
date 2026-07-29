@@ -1,7 +1,7 @@
 from rest_framework import generics, permissions
 
 from .models import Chapter
-from .serializers import ChapterSerializer
+from .serializers import ChapterSerializer, ChapterDetailSerializer
 
 from django.db.models import Q
 
@@ -84,7 +84,7 @@ class ChapterListCreateView(generics.ListCreateAPIView):
 
 class ChapterDetailView(generics.RetrieveUpdateDestroyAPIView):
 
-    serializer_class = ChapterSerializer
+    serializer_class = ChapterDetailSerializer
 
     permission_classes = [
         permissions.IsAuthenticated
