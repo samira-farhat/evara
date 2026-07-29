@@ -85,4 +85,7 @@ class ApiConfig {
 
   static String get chapters =>
       "$baseUrl/chapters/";
+
+  static String chapterDetails(int id) =>
+      "$chapters$id/";
 }

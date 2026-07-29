@@ -14,6 +14,11 @@ class Chapter(models.Model):
         max_length=100
     )
 
+    description = models.TextField(
+        blank=True,
+        null=True
+    )
+
     cover_image = models.ImageField(
         upload_to="chapter_covers/",
         null=True,

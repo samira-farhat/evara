@@ -2,28 +2,10 @@ from rest_framework import serializers
 from .models import Chapter
 
 
-
 class ChapterSerializer(serializers.ModelSerializer):
-
-    class Meta:
-
-        model = Chapter
-
-        fields = [
-            "id",
-            "title",
-            "cover_image",
-            "created_at",
-            "updated_at",
-        ]
-
-
-
-class ChapterHomeSerializer(serializers.ModelSerializer):
 
     capsule_count = serializers.SerializerMethodField()
 
-
     class Meta:
 
         model = Chapter
@@ -31,8 +13,11 @@ class ChapterHomeSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "title",
+            "description",
             "cover_image",
             "capsule_count",
+            "created_at",
+            "updated_at",
         ]
 
 

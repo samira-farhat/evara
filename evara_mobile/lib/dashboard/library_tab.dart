@@ -439,7 +439,7 @@ class _LibraryTabState extends State<LibraryTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header & Filter Icon Button
+                // Header (Library Title Only)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -451,9 +451,58 @@ class _LibraryTabState extends State<LibraryTab> {
                         color: Colors.black,
                       ),
                     ),
-                    IconButton(
-                      onPressed: _showFilterSortModal,
-                      icon: Container(
+                  ],
+                ),
+
+                SizedBox(height: 16),
+
+                // Search Bar and Small Filter Button side-by-side (matching ChaptersTab sizing)
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.03),
+                              blurRadius: 15,
+                              offset: Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          style: TextStyle(
+                            color: Colors.black87,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: "Search capsules...",
+                            hintStyle: TextStyle(color: Colors.black.withValues(alpha: 0.4), fontSize: 14),
+                            prefixIcon: Icon(Icons.search_rounded, color: Colors.black.withValues(alpha: 0.4)),
+                            suffixIcon: _searchController.text.isNotEmpty
+                                ? IconButton(
+                              icon: Icon(Icons.clear, size: 18),
+                              onPressed: () {
+                                _searchController.clear();
+                                _filterCapsules();
+                              },
+                            )
+                                : null,
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    // Small Filter Button next to search bar
+                    GestureDetector(
+                      onTap: _showFilterSortModal,
+                      child: Container(
                         padding: EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -470,47 +519,6 @@ class _LibraryTabState extends State<LibraryTab> {
                       ),
                     ),
                   ],
-                ),
-
-                SizedBox(height: 16),
-
-                // Search Bar
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 15,
-                        offset: Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    style: TextStyle(
-                      color: Colors.black87,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: "Search capsules...",
-                      hintStyle: TextStyle(color: Colors.black.withValues(alpha: 0.4), fontSize: 14),
-                      prefixIcon: Icon(Icons.search_rounded, color: Colors.black.withValues(alpha: 0.4)),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                        icon: Icon(Icons.clear, size: 18),
-                        onPressed: () {
-                          _searchController.clear();
-                          _filterCapsules();
-                        },
-                      )
-                          : null,
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    ),
-                  ),
                 ),
 
                 SizedBox(height: 20),
