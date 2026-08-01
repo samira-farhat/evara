@@ -166,3 +166,19 @@ EMAIL_HOST_USER = "theevaraapp@gmail.com"
 EMAIL_HOST_PASSWORD = "fcwb wtbx fzbc pwrz"
 
 
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+
+CELERY_ACCEPT_CONTENT = [
+    "json"
+]
+
+CELERY_TASK_SERIALIZER = "json"
+
+CELERY_TIMEZONE = "UTC"
+
+CELERY_BEAT_SCHEDULE = {
+    "deliver-capsules-every-minute": {
+        "task": "capsules.tasks.deliver_capsules",
+        "schedule": 60.0,
+    },
+}
