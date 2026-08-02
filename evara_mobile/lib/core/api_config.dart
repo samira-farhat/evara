@@ -80,6 +80,12 @@ class ApiConfig {
   static String get attachments =>
       "${capsules}attachments/";
 
+  static String capsuleDetails(int id) =>
+      "$capsules$id/";
+
+  static String capsuleReflection(int id) =>
+      "$capsules$id/reflection/";
+
 
   // Chapters
 
@@ -88,4 +94,19 @@ class ApiConfig {
 
   static String chapterDetails(int id) =>
       "$chapters$id/";
+
+  // Reflections
+
+  static String get reflections =>
+      "$baseUrl/reflections/";
+
+  static String get reflectionAttachments =>
+      "${reflections}attachments/";
+
+  static String reflectionDetails(int id) =>
+      "$reflections$id/";
+
+  static String get sendReflectionForward =>
+      "${reflections}send-forward/";
+
 }

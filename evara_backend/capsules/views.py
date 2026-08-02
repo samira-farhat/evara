@@ -14,6 +14,8 @@ from rest_framework.response import Response
 
 from django.db.models import Q
 
+from rest_framework.exceptions import PermissionDenied
+
 
 class CapsuleViewSet(viewsets.ModelViewSet):
 
@@ -33,6 +35,30 @@ class CapsuleViewSet(viewsets.ModelViewSet):
         serializer.save(
             user=self.request.user
         )
+
+
+    def retrieve(self, request, *args, **kwargs):
+
+        capsule = self.get_object()
+
+        if capsule.unlock_date > timezone.now():
+            raise PermissionDenied(
+                "This capsule is locked and cannot be opened yet."
+            )
+
+        if not capsule.has_been_opened:
+            capsule.has_been_opened = True
+            capsule.opened_at = timezone.now()
+            capsule.save(
+                update_fields=[
+                    "has_been_opened",
+                    "opened_at",
+                ]
+            )
+
+        serializer = self.get_serializer(capsule)
+
+        return Response(serializer.data)
 
 
 
@@ -166,3 +192,54 @@ class CapsuleLibraryAPIView(APIView):
             "count": capsules.count(),
             "capsules": serializer.data
         })
+
+
+class CapsuleReflectionAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+
+    def get(self, request, capsule_id):
+
+        from reflections.serializers import ReflectionSerializer
+
+        capsule = Capsule.objects.filter(
+            id=capsule_id,
+            user=request.user
+        ).first()
+
+
+        if not capsule:
+            return Response(
+                {
+                    "detail": "Capsule not found."
+                },
+                status=404
+            )
+
+
+        if capsule.capsule_type == "letter":
+            return Response(
+                {
+                    "detail": "Letter capsules do not have reflections."
+                },
+                status=400
+            )
+
+
+        if not hasattr(capsule, "reflection"):
+            return Response(
+                {
+                    "reflection": None
+                }
+            )
+
+
+        serializer = ReflectionSerializer(
+            capsule.reflection
+        )
+
+
+        return Response(
+            serializer.data
+        )

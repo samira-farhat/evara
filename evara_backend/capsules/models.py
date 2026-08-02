@@ -28,6 +28,22 @@ class Capsule(models.Model):
         related_name="capsules"
     )
 
+    parent_capsule = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="follow_up_capsules"
+    )
+
+    reflection_source = models.ForeignKey(
+        "reflections.Reflection",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="future_capsules"
+    )
+
 
     title = models.CharField(
         max_length=255
@@ -48,6 +64,15 @@ class Capsule(models.Model):
 
 
     unlock_date = models.DateTimeField()
+
+    opened_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    has_been_opened = models.BooleanField(
+        default=False
+    )
 
     recipient_name = models.CharField(
         max_length=100,

@@ -28,6 +28,10 @@ class CapsuleSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
+    reflection_source = serializers.PrimaryKeyRelatedField(
+        read_only=True
+    )
+
     def validate(self, data):
 
         capsule_type = data.get(
@@ -84,6 +88,9 @@ class CapsuleSerializer(serializers.ModelSerializer):
 
             "chapter",
 
+            "parent_capsule",
+            "reflection_source",
+
             "prediction_text",
             "prediction_result",
 
@@ -93,6 +100,9 @@ class CapsuleSerializer(serializers.ModelSerializer):
 
             "is_delivered",
             "delivered_at",
+
+            "has_been_opened",
+            "opened_at",
 
             "attachments",
 

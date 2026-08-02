@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import '../../../../core/app_colors.dart';
 import '../../../../core/api_config.dart';
 import '../../../../core/api_client.dart';
+import 'capsule_details_screen.dart';
 
 class ChapterDetailsScreen extends StatefulWidget {
   final int chapterId;
@@ -884,8 +885,19 @@ class _ChapterDetailsScreenState extends State<ChapterDetailsScreen> {
   }
 
   Widget _buildCapsuleCard(dynamic capsule) {
+    final capsuleId = capsule['id'];
     final title = capsule['title'] ?? 'Untitled';
     final rawType = capsule['capsule_type'] ?? 'memory';
+    final unlockDateStr = capsule['unlock_date'];
+
+    // Determine if unlocked
+    bool isUnlocked = false;
+    if (unlockDateStr != null) {
+      try {
+        final unlockDate = DateTime.parse(unlockDateStr);
+        isUnlocked = unlockDate.isBefore(DateTime.now()) || unlockDate.isAtSameMomentAs(DateTime.now());
+      } catch (_) {}
+    }
 
     String formattedType = 'Memory Capsule';
     if (rawType == 'prediction') {
@@ -899,12 +911,14 @@ class _ChapterDetailsScreenState extends State<ChapterDetailsScreen> {
     }
 
     final daysRemaining = capsule['days_remaining'] ?? 0;
-    final timeAgoText = '$daysRemaining days';
+
+    // Show "Ready" if unlocked or days remaining <= 0, otherwise show the countdown
+    final timeAgoText = (isUnlocked || daysRemaining <= 0) ? 'Ready' : '$daysRemaining days';
 
     String dateText = '';
     try {
-      if (capsule['unlock_date'] != null) {
-        final parsedDate = DateTime.parse(capsule['unlock_date']);
+      if (unlockDateStr != null) {
+        final parsedDate = DateTime.parse(unlockDateStr);
         dateText = DateFormat('MMM yyyy').format(parsedDate);
       }
     } catch (_) {
@@ -919,7 +933,15 @@ class _ChapterDetailsScreenState extends State<ChapterDetailsScreen> {
     }
 
     return GestureDetector(
-      onTap: () {},
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CapsuleDetailsScreen(capsuleId: capsuleId),
+          ),
+        );
+        _fetchChapterDetails();
+      },
       child: Container(
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -942,7 +964,11 @@ class _ChapterDetailsScreenState extends State<ChapterDetailsScreen> {
                 color: capsuleColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(Icons.lock_outline_rounded, color: capsuleColor, size: 24),
+              child: Icon(
+                isUnlocked ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+                color: capsuleColor,
+                size: 24,
+              ),
             ),
             SizedBox(width: 16),
             Expanded(
