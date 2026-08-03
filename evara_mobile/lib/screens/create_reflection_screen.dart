@@ -90,12 +90,16 @@ class _CreateReflectionScreenState extends State<CreateReflectionScreen> {
         final reflectionId = data['id'];
 
         if (sendToFuture) {
+          // Fetch the capsule details to get its chapter ID
+          final int? initialChapterId = data['capsule_chapter'];
+
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (context) => SealReflectionScreen(
                 reflectionId: reflectionId,
                 defaultTitle: _titleController.text.trim(),
+                initialChapterId: initialChapterId,
               ),
             ),
           );
@@ -137,13 +141,21 @@ class _CreateReflectionScreenState extends State<CreateReflectionScreen> {
                   children: [
                     const Text("Reflecting on", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black45)),
                     const SizedBox(height: 4),
-                    TextField(
-                      controller: _titleController,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
-                      decoration: const InputDecoration(
-                        border: UnderlineInputBorder(),
-                        isDense: true,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _titleController,
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
+                            decoration: const InputDecoration(
+                              border: UnderlineInputBorder(),
+                              isDense: true,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(Icons.edit_rounded, size: 20, color: AppColors.twilightPurple.withValues(alpha: 0.7)),
+                      ],
                     ),
                     const SizedBox(height: 24),
                     Container(
@@ -161,8 +173,10 @@ class _CreateReflectionScreenState extends State<CreateReflectionScreen> {
                     TextField(
                       controller: _contentController,
                       maxLines: 8,
+                      style: const TextStyle(fontSize: 15, color: Colors.black87),
                       decoration: InputDecoration(
                         hintText: "Write your thoughts here...",
+                        hintStyle: TextStyle(color: Colors.black.withValues(alpha: 0.4)),
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
@@ -189,6 +203,8 @@ class _CreateReflectionScreenState extends State<CreateReflectionScreen> {
                           child: OutlinedButton(
                             onPressed: _isLoading ? null : () => _saveReflection(sendToFuture: false),
                             style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.twilightPurple,
+                              side: BorderSide(color: AppColors.twilightPurple.withValues(alpha: 0.5)),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             ),

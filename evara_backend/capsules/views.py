@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Capsule, Attachment
 from .serializers import (
     CapsuleSerializer,
+    LockedCapsuleSerializer,
     AttachmentSerializer,
     CapsuleLibrarySerializer
 )
@@ -42,9 +43,10 @@ class CapsuleViewSet(viewsets.ModelViewSet):
         capsule = self.get_object()
 
         if capsule.unlock_date > timezone.now():
-            raise PermissionDenied(
-                "This capsule is locked and cannot be opened yet."
-            )
+
+            serializer = LockedCapsuleSerializer(capsule)
+
+            return Response(serializer.data)
 
         if not capsule.has_been_opened:
             capsule.has_been_opened = True

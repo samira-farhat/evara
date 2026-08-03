@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/app_colors.dart';
 import '../../../../core/api_config.dart';
 import '../../../../core/api_client.dart';
+import 'seal_reflection_screen.dart';
 
 class ReflectionDetailsScreen extends StatefulWidget {
   final int reflectionId;
@@ -49,6 +50,15 @@ class _ReflectionDetailsScreenState extends State<ReflectionDetailsScreen> {
     final createdAt = _reflection?['created_at'] != null
         ? DateFormat('d MMMM yyyy').format(DateTime.parse(_reflection!['created_at']))
         : '';
+
+    // Get capsule title and chapter from reflection response
+    final String reflectionTitle =
+    _reflection?['capsule_title'] != null
+        ? "${_reflection!['capsule_title']} - Reflection"
+        : "Reflection - Future Capsule";
+
+    final int? chapterId =
+    _reflection?['capsule_chapter'];
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
@@ -99,6 +109,33 @@ class _ReflectionDetailsScreenState extends State<ReflectionDetailsScreen> {
                       child: Text(
                         _reflection?['content'] ?? '',
                         style: const TextStyle(fontSize: 15, height: 1.5, color: Colors.black87),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SealReflectionScreen(
+                                reflectionId: widget.reflectionId,
+                                defaultTitle: reflectionTitle,
+                                initialChapterId: chapterId,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.lock_rounded, size: 18),
+                        label: const Text("Send to the Future", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.twilightPurple,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 0,
+                        ),
                       ),
                     ),
                   ],

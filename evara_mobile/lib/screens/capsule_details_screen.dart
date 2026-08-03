@@ -50,11 +50,18 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
           });
         }
       } else if (response.statusCode == 403) {
-        final errorData = jsonDecode(response.body);
-        setState(() {
-          _errorMessage = errorData['detail'] ?? "This capsule is locked.";
-          _isLoading = false;
-        });
+        try {
+          final data = jsonDecode(response.body);
+          setState(() {
+            _capsule = data;
+            _isLoading = false;
+          });
+        } catch (_) {
+          setState(() {
+            _errorMessage = "This capsule is locked.";
+            _isLoading = false;
+          });
+        }
       } else {
         setState(() {
           _errorMessage = "Failed to load capsule details.";
@@ -75,16 +82,28 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          _reflection = data['reflection'] != null ? data : null;
+          if (data is Map) {
+            if (data.containsKey('reflection') && data['reflection'] != null) {
+              _reflection = data['reflection'];
+            } else if (data.containsKey('id')) {
+              _reflection = data as Map<String, dynamic>;
+            } else {
+              _reflection = null;
+            }
+          } else {
+            _reflection = null;
+          }
           _isLoading = false;
         });
       } else {
         setState(() {
+          _reflection = null;
           _isLoading = false;
         });
       }
     } catch (_) {
       setState(() {
+        _reflection = null;
         _isLoading = false;
       });
     }
@@ -92,8 +111,54 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
 
   bool _isUnlocked() {
     if (_capsule == null) return false;
-    final unlockDate = DateTime.parse(_capsule!['unlock_date']);
+    final unlockDateStr = _capsule!['unlock_date'];
+    if (unlockDateStr == null) return false;
+    final unlockDate = DateTime.parse(unlockDateStr);
     return unlockDate.isBefore(DateTime.now()) || unlockDate.isAtSameMomentAs(DateTime.now());
+  }
+
+  void _showMediaPreview(String url, String type) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.8),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(10),
+        child: Stack(
+          children: [
+            Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: InteractiveViewer(
+                  child: Image.network(
+                    url,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => const Center(
+                      child: Text("Failed to load media", style: TextStyle(color: Colors.white)),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 10,
+              right: 10,
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: Colors.black54,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -123,33 +188,40 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
     final title = _capsule?['title'] ?? 'Capsule details';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+          Align(
+            alignment: Alignment.centerLeft,
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: Colors.black87),
               ),
-              child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: Colors.black87),
             ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 50),
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.black87),
+              ),
             ),
           ),
         ],
@@ -158,17 +230,48 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
   }
 
   Widget _buildLockedContent() {
+    final rawType = _capsule?['capsule_type'] ?? 'memory';
+    String formattedType = 'Memory Capsule';
+    if (rawType == 'prediction') {
+      formattedType = 'Prediction Capsule';
+    } else if (rawType == 'accountability') {
+      formattedType = 'Accountability Capsule';
+    } else if (rawType == 'letter') {
+      formattedType = 'Letter Capsule';
+    } else {
+      formattedType = '${rawType[0].toUpperCase()}${rawType.substring(1)} Capsule';
+    }
+
+    final createdAtStr = _capsule?['created_at'];
+    final createdDateFormatted = createdAtStr != null ? DateFormat('d MMMM yyyy').format(DateTime.parse(createdAtStr)) : '';
+
     final unlockDateStr = _capsule?['unlock_date'];
     DateTime? unlockDate = unlockDateStr != null ? DateTime.parse(unlockDateStr) : null;
-    String formattedDate = unlockDate != null ? DateFormat('d MMMM yyyy').format(unlockDate) : '';
+    String formattedUnlockDate = unlockDate != null ? DateFormat('d MMMM yyyy').format(unlockDate) : '';
 
     String remainingText = "Soon";
-    if (unlockDate != null) {
-      final diff = unlockDate.difference(DateTime.now());
-      if (diff.inHours < 24) {
+    double progressValue = 0.0;
+
+    if (unlockDate != null && createdAtStr != null) {
+      final createdDate = DateTime.parse(createdAtStr);
+      final now = DateTime.now();
+
+      final totalDuration = unlockDate.difference(createdDate).inSeconds;
+      final elapsedDuration = now.difference(createdDate).inSeconds;
+
+      if (totalDuration > 0) {
+        progressValue = (elapsedDuration / totalDuration).clamp(0.0, 1.0);
+      }
+
+      final diff = unlockDate.difference(now);
+      if (diff.isNegative) {
+        remainingText = "0h";
+      } else if (diff.inDays > 0) {
+        remainingText = "${diff.inDays} days";
+      } else if (diff.inHours > 0) {
         remainingText = "${diff.inHours}h";
       } else {
-        remainingText = "${diff.inDays} days";
+        remainingText = "${diff.inMinutes}m";
       }
     }
 
@@ -176,25 +279,26 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          const SizedBox(height: 10),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: AppColors.twilightPurple.withValues(alpha: 0.1),
+              color: AppColors.twilightPurple.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Icon(Icons.lock_rounded, color: AppColors.twilightPurple, size: 32),
+            child: Icon(Icons.lock_rounded, color: AppColors.twilightPurple, size: 30),
           ),
           const SizedBox(height: 12),
-          const Text("Memory Capsule", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black54)),
+          Text(
+            formattedType,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black54),
+          ),
           const SizedBox(height: 4),
           Text(
-            _capsule?['created_at'] != null
-                ? "Created ${DateFormat('d MMMM yyyy').format(DateTime.parse(_capsule!['created_at']))}"
-                : "",
+            "Created $createdDateFormatted",
             style: TextStyle(fontSize: 12, color: Colors.black.withValues(alpha: 0.4)),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
+
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(24),
@@ -215,20 +319,23 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
                 const SizedBox(height: 8),
                 const Text("Sealed until", style: TextStyle(fontSize: 12, color: Colors.black54)),
                 const SizedBox(height: 4),
-                Text(formattedDate, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87)),
+                Text(
+                    formattedUnlockDate,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87)
+                ),
                 const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(remainingText, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.twilightPurple)),
-                    Text("Opens in $remainingText", style: TextStyle(fontSize: 12, color: Colors.black.withValues(alpha: 0.4))),
-                  ],
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                      "Opens in $remainingText",
+                      style: TextStyle(fontSize: 12, color: Colors.black.withValues(alpha: 0.4))
+                  ),
                 ),
                 const SizedBox(height: 8),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: LinearProgressIndicator(
-                    value: 0.7,
+                    value: progressValue,
                     backgroundColor: AppColors.lavender.withValues(alpha: 0.2),
                     valueColor: AlwaysStoppedAnimation<Color>(AppColors.twilightPurple),
                     minHeight: 6,
@@ -238,6 +345,7 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
             ),
           ),
           const SizedBox(height: 20),
+
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
@@ -255,14 +363,16 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("Preview", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black45)),
+                const Text(
+                    "Preview",
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black45)
+                ),
                 const SizedBox(height: 8),
                 Text(
                   "Hidden until unlocked",
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.black.withValues(alpha: 0.3),
-                    decoration: TextDecoration.lineThrough,
+                    color: Colors.black.withValues(alpha: 0.25),
                   ),
                 ),
               ],
@@ -280,10 +390,24 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
   }
 
   Widget _buildUnlockedContent() {
-    final type = _capsule?['capsule_type'] ?? 'memory';
-    final message = _capsule?['message'] ?? '';
+    final rawType = _capsule?['capsule_type'] ?? 'memory';
+    String formattedType = 'Memory Capsule';
+    if (rawType == 'prediction') {
+      formattedType = 'Prediction Capsule';
+    } else if (rawType == 'accountability') {
+      formattedType = 'Accountability Capsule';
+    } else if (rawType == 'letter') {
+      formattedType = 'Letter Capsule';
+    } else {
+      formattedType = '${rawType[0].toUpperCase()}${rawType.substring(1)} Capsule';
+    }
+
+    final message = _capsule?['display_message'] ?? '';
+
     final createdAtStr = _capsule?['created_at'];
     final createdDateFormatted = createdAtStr != null ? DateFormat('d MMMM yyyy').format(DateTime.parse(createdAtStr)) : '';
+    final attachments = _capsule?['attachments'] as List<dynamic>? ?? [];
+    final reflectionSentForward = _capsule?['reflection_sent_forward'] ?? false;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -294,17 +418,17 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
             child: Column(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: AppColors.twilightPurple.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
+                    color: AppColors.twilightPurple.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Icon(Icons.lock_open_rounded, color: AppColors.twilightPurple, size: 28),
+                  child: Icon(Icons.lock_open_rounded, color: AppColors.twilightPurple, size: 30),
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  "${type[0].toUpperCase()}${type.substring(1)} Capsule",
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black54),
+                  formattedType,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black54),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -317,7 +441,7 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
           ),
           const SizedBox(height: 24),
 
-          if (type == 'letter') ...[
+          if (rawType == 'letter') ...[
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -345,6 +469,7 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
             const SizedBox(height: 16),
           ],
 
+          // Main Message Card
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
@@ -378,9 +503,63 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
             ),
           ),
 
+          // Attachments Section with Click-to-Preview
+          if (attachments.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            const Text(
+              "Attachments",
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 100,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: attachments.length,
+                separatorBuilder: (context, index) => const SizedBox(width: 12),
+                itemBuilder: (context, index) {
+                  final attachment = attachments[index];
+                  final fileUrl = ApiConfig.buildMediaUrl(attachment['file'] ?? '');
+                  final fileType = attachment['file_type'] ?? 'image';
+
+                  return GestureDetector(
+                    onTap: () => _showMediaPreview(fileUrl, fileType),
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.network(
+                          fileUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Center(
+                            child: Icon(Icons.insert_drive_file_rounded, color: AppColors.twilightPurple),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+
           const SizedBox(height: 32),
 
-          if (type != 'letter') ...[
+          // Reflections Section
+          // Reflections Section
+          if (rawType != 'letter') ...[
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -399,54 +578,83 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
                 children: [
                   const Text(
                     "Reflect on that",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
                   ),
+
                   const SizedBox(height: 6),
+
                   Text(
-                    _reflection != null
+                    reflectionSentForward
+                        ? "You wrote a reflection on this moment and sent it to your future self as a new capsule."
+                        : _reflection != null
                         ? "You wrote a reflection on this capsule on ${DateFormat('d MMM yyyy').format(DateTime.parse(_reflection!['created_at']))}."
                         : "Reply to your past self and capture your thoughts on this moment.",
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 13, color: Colors.black.withValues(alpha: 0.6)),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.black.withValues(alpha: 0.6),
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () async {
-                      if (_reflection != null) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ReflectionDetailsScreen(reflectionId: _reflection!['id']),
-                          ),
-                        );
-                      } else {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CreateReflectionScreen(
-                              capsuleId: widget.capsuleId,
-                              capsuleTitle: _capsule?['title'] ?? '',
-                              capsuleType: type,
+
+                  // Only show button if reflection was NOT sent forward
+                  if (!reflectionSentForward) ...[
+                    const SizedBox(height: 16),
+
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (_reflection != null && _reflection!['id'] != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ReflectionDetailsScreen(
+                                reflectionId: _reflection!['id'],
+                              ),
                             ),
-                          ),
-                        );
-                        if (result == true) {
-                          _fetchCapsuleDetails();
+                          );
+                        } else {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CreateReflectionScreen(
+                                capsuleId: widget.capsuleId,
+                                capsuleTitle: _capsule?['title'] ?? '',
+                                capsuleType: rawType,
+                              ),
+                            ),
+                          );
+
+                          if (result == true) {
+                            _fetchCapsuleDetails();
+                          }
                         }
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.twilightPurple,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      elevation: 0,
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.twilightPurple,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        _reflection != null
+                            ? "View Reflection"
+                            : "Write Reflection",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
-                    child: Text(
-                      _reflection != null ? "View Reflection" : "Write Reflection",
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                    ),
-                  ),
+                  ],
                 ],
               ),
             ),

@@ -32,6 +32,10 @@ class CapsuleSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
+    display_message = serializers.SerializerMethodField()
+
+    reflection_sent_forward = serializers.SerializerMethodField()
+
     def validate(self, data):
 
         capsule_type = data.get(
@@ -71,6 +75,26 @@ class CapsuleSerializer(serializers.ModelSerializer):
 
         return data
 
+    def get_display_message(self, obj):
+
+        if obj.capsule_type in ["memory", "letter"]:
+            return obj.message
+
+        if obj.capsule_type == "prediction":
+            return obj.prediction_text
+
+        if obj.capsule_type == "accountability":
+            return obj.goal_description
+
+        return ""
+
+    def get_reflection_sent_forward(self, obj):
+
+        if not hasattr(obj, "reflection"):
+            return False
+
+        return obj.reflection.future_capsules.exists()
+
 
     class Meta:
 
@@ -79,7 +103,12 @@ class CapsuleSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "title",
+
+            "display_message",
             "message",
+
+            "reflection_sent_forward",
+
             "capsule_type",
             "unlock_date",
 
@@ -110,6 +139,33 @@ class CapsuleSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+
+class LockedCapsuleSerializer(serializers.ModelSerializer):
+
+    attachments = AttachmentSerializer(
+        many=True,
+        read_only=True
+    )
+
+    class Meta:
+
+        model = Capsule
+
+        fields = [
+            "id",
+            "title",
+            "capsule_type",
+
+            "chapter",
+
+            "unlock_date",
+            "created_at",
+
+            "attachments",
+
+            "has_been_opened",
+            "opened_at",
+        ]
 
 
 class CapsuleLibrarySerializer(serializers.ModelSerializer):

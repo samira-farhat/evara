@@ -3,6 +3,7 @@ from rest_framework import serializers
 from .models import Reflection, ReflectionAttachment
 from capsules.models import Capsule
 
+from chapters.models import Chapter
 
 
 class ReflectionAttachmentSerializer(serializers.ModelSerializer):
@@ -26,6 +27,16 @@ class ReflectionSerializer(serializers.ModelSerializer):
     attachments = ReflectionAttachmentSerializer(
         many=True,
         read_only=True
+    )
+
+    capsule_title = serializers.CharField(
+        source="capsule.title",
+        read_only=True,
+    )
+
+    capsule_chapter = serializers.IntegerField(
+        source="capsule.chapter_id",
+        read_only=True,
     )
 
 
@@ -77,6 +88,8 @@ class ReflectionSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "capsule",
+            "capsule_title",
+            "capsule_chapter",
             "content",
             "attachments",
             "created_at",
@@ -96,4 +109,10 @@ class ReflectionSendForwardSerializer(serializers.Serializer):
         required=False,
         allow_blank=True,
         max_length=255
+    )
+
+    chapter = serializers.PrimaryKeyRelatedField(
+        queryset=Chapter.objects.all(),
+        required=False,
+        allow_null=True,
     )

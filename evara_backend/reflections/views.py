@@ -80,6 +80,17 @@ class ReflectionSendForwardAPIView(APIView):
 
         title = serializer.validated_data.get("title")
 
+        chapter = serializer.validated_data.get("chapter")
+
+        if chapter is None:
+            chapter = original_capsule.chapter
+
+
+        if chapter and chapter.user != request.user:
+            return Response(
+                {"error": "Invalid chapter."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         if not title:
             title = f"{root_capsule.title} - Reflection"
@@ -90,6 +101,8 @@ class ReflectionSendForwardAPIView(APIView):
             user=request.user,
 
             title=title,
+
+            chapter=chapter,
 
             message=reflection.content,
 
