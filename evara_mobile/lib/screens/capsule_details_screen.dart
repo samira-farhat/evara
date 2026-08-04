@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -21,11 +22,27 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
   String? _errorMessage;
   Map<String, dynamic>? _capsule;
   Map<String, dynamic>? _reflection;
+  Timer? _countdownTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchCapsuleDetails();
+    _startCountdownTimer();
+  }
+
+  void _startCountdownTimer() {
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted && _capsule != null && !(_isUnlocked())) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _fetchCapsuleDetails() async {
@@ -123,7 +140,7 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
       barrierColor: Colors.black.withValues(alpha: 0.8),
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.all(10),
+        insetPadding: EdgeInsets.all(10),
         child: Stack(
           children: [
             Center(
@@ -133,7 +150,7 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
                   child: Image.network(
                     url,
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const Center(
+                    errorBuilder: (context, error, stackTrace) => Center(
                       child: Text("Failed to load media", style: TextStyle(color: Colors.white)),
                     ),
                   ),
@@ -146,12 +163,12 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
               child: GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
                     color: Colors.black54,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
+                  child: Icon(Icons.close_rounded, color: Colors.white, size: 20),
                 ),
               ),
             ),
@@ -187,7 +204,7 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
   Widget _buildAppBar() {
     final title = _capsule?['title'] ?? 'Capsule details';
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -196,7 +213,7 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
             child: GestureDetector(
               onTap: () => Navigator.pop(context),
               child: Container(
-                padding: const EdgeInsets.all(10),
+                padding: EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
@@ -204,23 +221,23 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
-                      offset: const Offset(0, 4),
+                      offset: Offset(0, 4),
                     ),
                   ],
                 ),
-                child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: Colors.black87),
+                child: Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: Colors.black87),
               ),
             ),
           ),
           Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 50),
+              padding: EdgeInsets.symmetric(horizontal: 50),
               child: Text(
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.black87),
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.black87),
               ),
             ),
           ),
@@ -249,59 +266,96 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
     DateTime? unlockDate = unlockDateStr != null ? DateTime.parse(unlockDateStr) : null;
     String formattedUnlockDate = unlockDate != null ? DateFormat('d MMMM yyyy').format(unlockDate) : '';
 
-    String remainingText = "Soon";
-    double progressValue = 0.0;
+    List<Map<String, dynamic>> timeUnits = [];
 
-    if (unlockDate != null && createdAtStr != null) {
-      final createdDate = DateTime.parse(createdAtStr);
+    if (unlockDate != null) {
       final now = DateTime.now();
+      if (unlockDate.isAfter(now)) {
+        int years = unlockDate.year - now.year;
+        int months = unlockDate.month - now.month;
+        int days = unlockDate.day - now.day;
+        int hours = unlockDate.hour - now.hour;
+        int minutes = unlockDate.minute - now.minute;
+        int seconds = unlockDate.second - now.second;
 
-      final totalDuration = unlockDate.difference(createdDate).inSeconds;
-      final elapsedDuration = now.difference(createdDate).inSeconds;
+        if (seconds < 0) {
+          seconds += 60;
+          minutes--;
+        }
+        if (minutes < 0) {
+          minutes += 60;
+          hours--;
+        }
+        if (hours < 0) {
+          hours += 24;
+          days--;
+        }
+        if (days < 0) {
+          final prevMonth = DateTime(unlockDate.year, unlockDate.month - 1, now.day);
+          final daysInPrevMonth = DateTime(prevMonth.year, prevMonth.month + 1, 0).day;
+          days += daysInPrevMonth;
+          months--;
+        }
+        if (months < 0) {
+          months += 12;
+          years--;
+        }
 
-      if (totalDuration > 0) {
-        progressValue = (elapsedDuration / totalDuration).clamp(0.0, 1.0);
-      }
-
-      final diff = unlockDate.difference(now);
-      if (diff.isNegative) {
-        remainingText = "0h";
-      } else if (diff.inDays > 0) {
-        remainingText = "${diff.inDays} days";
-      } else if (diff.inHours > 0) {
-        remainingText = "${diff.inHours}h";
-      } else {
-        remainingText = "${diff.inMinutes}m";
+        if (years > 0) {
+          timeUnits.add({'value': years, 'label': years == 1 ? 'Year' : 'Years'});
+        }
+        if (years > 0 || months > 0) {
+          timeUnits.add({'value': months, 'label': months == 1 ? 'Month' : 'Months'});
+        }
+        if (years > 0 || months > 0 || days > 0) {
+          timeUnits.add({'value': days, 'label': days == 1 ? 'Day' : 'Days'});
+        }
+        timeUnits.add({'value': hours, 'label': 'Hours'});
+        timeUnits.add({'value': minutes, 'label': 'Minutes'});
+        timeUnits.add({'value': seconds, 'label': 'Seconds'});
       }
     }
 
+    if (timeUnits.isEmpty) {
+      timeUnits = [
+        {'value': 0, 'label': 'Hours'},
+        {'value': 0, 'label': 'Minutes'},
+        {'value': 0, 'label': 'Seconds'},
+      ];
+    }
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(24),
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(18),
+            padding: EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: AppColors.twilightPurple.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(Icons.lock_rounded, color: AppColors.twilightPurple, size: 30),
           ),
-          const SizedBox(height: 12),
+
+          SizedBox(height: 12),
+
           Text(
             formattedType,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black54),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black54),
           ),
-          const SizedBox(height: 4),
+
+          SizedBox(height: 4),
+
           Text(
             "Created $createdDateFormatted",
             style: TextStyle(fontSize: 12, color: Colors.black.withValues(alpha: 0.4)),
           ),
-          const SizedBox(height: 24),
+
+          SizedBox(height: 24),
 
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
@@ -309,46 +363,87 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
                 BoxShadow(
                   color: AppColors.purpleGlow.withValues(alpha: 0.08),
                   blurRadius: 20,
-                  offset: const Offset(0, 8),
+                  offset: Offset(0, 8),
                 ),
               ],
             ),
             child: Column(
               children: [
                 Icon(Icons.lock_rounded, color: AppColors.twilightPurple, size: 24),
-                const SizedBox(height: 8),
-                const Text("Sealed until", style: TextStyle(fontSize: 12, color: Colors.black54)),
-                const SizedBox(height: 4),
+
+                SizedBox(height: 8),
+
+                Text("Sealed until", style: TextStyle(fontSize: 12, color: Colors.black54)),
+
+                SizedBox(height: 4),
+
                 Text(
                     formattedUnlockDate,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87)
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black45)
                 ),
-                const SizedBox(height: 20),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                      "Opens in $remainingText",
-                      style: TextStyle(fontSize: 12, color: Colors.black.withValues(alpha: 0.4))
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: LinearProgressIndicator(
-                    value: progressValue,
-                    backgroundColor: AppColors.lavender.withValues(alpha: 0.2),
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.twilightPurple),
-                    minHeight: 6,
-                  ),
+
+                SizedBox(height: 24),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(timeUnits.length * 2 - 1, (index) {
+                    if (index.isOdd) {
+                      return Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 4),
+                        child: Transform.translate(
+                          offset: Offset(0, -5),
+                          child: Text(
+                            ":",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black.withValues(alpha: 0.4),
+                              height: 1.0,
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                    final unitIndex = index ~/ 2;
+                    final unit = timeUnits[unitIndex];
+                    final valStr = unit['value'].toString().padLeft(2, '0');
+                    final labelStr = unit['label'];
+
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          valStr,
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+
+                        SizedBox(height: 2),
+
+                        Text(
+                          labelStr,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black.withValues(alpha: 0.4),
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
+
+          SizedBox(height: 20),
 
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
@@ -356,18 +451,20 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.02),
                   blurRadius: 10,
-                  offset: const Offset(0, 4),
+                  offset: Offset(0, 4),
                 ),
               ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                     "Preview",
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black45)
                 ),
-                const SizedBox(height: 8),
+
+                SizedBox(height: 8),
+
                 Text(
                   "Hidden until unlocked",
                   style: TextStyle(
@@ -378,7 +475,9 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+
+          SizedBox(height: 16),
+
           Text(
             "Your future self will discover this on the date above.",
             style: TextStyle(fontSize: 12, color: Colors.black.withValues(alpha: 0.4)),
@@ -410,7 +509,7 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
     final reflectionSentForward = _capsule?['reflection_sent_forward'] ?? false;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -418,19 +517,23 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
             child: Column(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(18),
+                  padding: EdgeInsets.all(18),
                   decoration: BoxDecoration(
                     color: AppColors.twilightPurple.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Icon(Icons.lock_open_rounded, color: AppColors.twilightPurple, size: 30),
                 ),
-                const SizedBox(height: 12),
+
+                SizedBox(height: 12),
+
                 Text(
                   formattedType,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black54),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black54),
                 ),
-                const SizedBox(height: 4),
+
+                SizedBox(height: 4),
+
                 Text(
                   "Delivered to you safely from your past self ($createdDateFormatted)",
                   style: TextStyle(fontSize: 12, color: Colors.black.withValues(alpha: 0.5)),
@@ -439,12 +542,13 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+
+          SizedBox(height: 24),
 
           if (rawType == 'letter') ...[
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
@@ -452,27 +556,29 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.02),
                     blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    offset: Offset(0, 4),
                   ),
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Letter Recipient", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black45)),
-                  const SizedBox(height: 4),
+                  Text("Letter Recipient", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black45)),
+
+                  SizedBox(height: 4),
+
                   Text("To: ${_capsule?['recipient_name'] ?? 'Recipient'} (${_capsule?['recipient_email'] ?? ''})",
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87)),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87)),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
           ],
 
           // Main Message Card
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
@@ -480,7 +586,7 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
                 BoxShadow(
                   color: AppColors.purpleGlow.withValues(alpha: 0.06),
                   blurRadius: 15,
-                  offset: const Offset(0, 6),
+                  offset: Offset(0, 6),
                 ),
               ],
             ),
@@ -489,10 +595,12 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
               children: [
                 Text(
                   message,
-                  style: const TextStyle(fontSize: 15, height: 1.5, color: Colors.black87),
+                  style: TextStyle(fontSize: 15, height: 1.5, color: Colors.black87),
                 ),
-                const SizedBox(height: 24),
-                const Align(
+
+                SizedBox(height: 24),
+
+                Align(
                   alignment: Alignment.centerRight,
                   child: Text(
                     "with love, you",
@@ -505,18 +613,21 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
 
           // Attachments Section with Click-to-Preview
           if (attachments.isNotEmpty) ...[
-            const SizedBox(height: 20),
-            const Text(
+            SizedBox(height: 20),
+
+            Text(
               "Attachments",
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
             ),
-            const SizedBox(height: 10),
+
+            SizedBox(height: 10),
+
             SizedBox(
               height: 100,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: attachments.length,
-                separatorBuilder: (context, index) => const SizedBox(width: 12),
+                separatorBuilder: (context, index) => SizedBox(width: 12),
                 itemBuilder: (context, index) {
                   final attachment = attachments[index];
                   final fileUrl = ApiConfig.buildMediaUrl(attachment['file'] ?? '');
@@ -534,7 +645,7 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.04),
                             blurRadius: 8,
-                            offset: const Offset(0, 4),
+                            offset: Offset(0, 4),
                           ),
                         ],
                       ),
@@ -555,14 +666,13 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
             ),
           ],
 
-          const SizedBox(height: 32),
+          SizedBox(height: 32),
 
-          // Reflections Section
           // Reflections Section
           if (rawType != 'letter') ...[
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
@@ -570,13 +680,13 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.02),
                     blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    offset: Offset(0, 4),
                   ),
                 ],
               ),
               child: Column(
                 children: [
-                  const Text(
+                  Text(
                     "Reflect on that",
                     style: TextStyle(
                       fontSize: 16,
@@ -585,7 +695,7 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
 
                   Text(
                     reflectionSentForward
@@ -600,9 +710,9 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
                     ),
                   ),
 
-                  // Only show button if reflection was NOT sent forward
+                  // Only show this button if reflection was NOT sent forward
                   if (!reflectionSentForward) ...[
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
 
                     ElevatedButton(
                       onPressed: () async {
@@ -635,7 +745,7 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.twilightPurple,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
+                        padding: EdgeInsets.symmetric(
                           horizontal: 24,
                           vertical: 12,
                         ),
@@ -648,7 +758,7 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
                         _reflection != null
                             ? "View Reflection"
                             : "Write Reflection",
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
@@ -659,7 +769,7 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
               ),
             ),
           ],
-          const SizedBox(height: 40),
+          SizedBox(height: 40),
         ],
       ),
     );
@@ -668,7 +778,7 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
   Widget _buildErrorState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24),
         child: Text(_errorMessage ?? "Error loading capsule", textAlign: TextAlign.center),
       ),
     );

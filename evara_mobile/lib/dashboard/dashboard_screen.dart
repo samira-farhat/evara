@@ -19,9 +19,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   String _libraryInitialFilter = 'all';
 
+  bool _dismissReadyBanner = false;
+
   late final List<Widget> _screens = [
     HomeTab(
-      onViewReadyCapsules: () => _navigateToLibraryWithFilter('unlocked'),
+      dismissReadyBanner: _dismissReadyBanner,
+      onViewReadyCapsules: () {
+        setState(() {
+          _dismissReadyBanner = true;
+        });
+        _navigateToLibraryWithFilter('unlocked');
+      },
+      onNavigateToLibrary: () => _navigateToLibraryWithFilter('all'),
+      onNavigateToChapters: () => _onTabTapped(3),
     ),
     LibraryTab(key: ValueKey(_libraryInitialFilter), initialFilter: _libraryInitialFilter),
     const ChaptersTab(),

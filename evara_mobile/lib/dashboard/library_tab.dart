@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/app_colors.dart';
 import '../../../../core/api_config.dart';
 import '../../../../core/api_client.dart';
+import '../screens/capsule_details_screen.dart';
 
 class LibraryTab extends StatefulWidget {
   final String initialFilter; // 'all', 'locked', 'unlocked'
@@ -439,7 +440,6 @@ class _LibraryTabState extends State<LibraryTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header (Library Title Only)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -456,7 +456,6 @@ class _LibraryTabState extends State<LibraryTab> {
 
                 SizedBox(height: 16),
 
-                // Search Bar and Small Filter Button side-by-side (matching ChaptersTab sizing)
                 Row(
                   children: [
                     Expanded(
@@ -499,7 +498,7 @@ class _LibraryTabState extends State<LibraryTab> {
                       ),
                     ),
                     SizedBox(width: 10),
-                    // Small Filter Button next to search bar
+
                     GestureDetector(
                       onTap: _showFilterSortModal,
                       child: Container(
@@ -660,6 +659,8 @@ class _LibraryTabState extends State<LibraryTab> {
     final rawType = capsule['capsule_type'] ?? 'memory';
     final status = (capsule['status'] ?? 'locked').toLowerCase();
     bool isUnlocked = status == 'unlocked' || status == 'ready';
+    bool hasBeenOpened = capsule['has_been_opened'] ?? true;
+    bool showUnreadDot = isUnlocked && !hasBeenOpened;
 
     final cardColor = _getCapsuleColor(rawType);
     String formattedType = '${rawType[0].toUpperCase()}${rawType.substring(1)} Capsule';
@@ -684,7 +685,16 @@ class _LibraryTabState extends State<LibraryTab> {
 
     return GestureDetector(
       onTap: () {
-        // TODO: Navigate to Capsule Details screen when built
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CapsuleDetailsScreen(
+              capsuleId: capsule['id'],
+            ),
+          ),
+        ).then((_) {
+          _fetchLibraryData();
+        });
       },
       child: Container(
         padding: EdgeInsets.all(16),
@@ -725,15 +735,32 @@ class _LibraryTabState extends State<LibraryTab> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      if (showUnreadDot) ...[
+                        SizedBox(width: 6),
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: AppColors.twilightPurple,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
 
                   SizedBox(height: 4),

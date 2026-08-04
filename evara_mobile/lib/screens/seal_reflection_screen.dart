@@ -115,13 +115,14 @@ class _SealReflectionScreenState extends State<SealReflectionScreen> {
 
       builder: (context, child) {
         return Theme(
-          data: ThemeData.dark().copyWith(
+          data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.dark(
-              primary: AppColors.twilightPurple,
-              onPrimary: Colors.white,
-              surface: AppColors.twilightPurple,
-              onSurface: Colors.white,
+              primary: AppColors.twilightPurple,   // selected day circle
+              onPrimary: Colors.white,             // number inside selected day
+              surface: Colors.white,               // calendar background
+              onSurface: Colors.black87,           // normal text
             ),
+            dialogBackgroundColor: Colors.white,
           ),
           child: child!,
         );
@@ -144,18 +145,18 @@ class _SealReflectionScreenState extends State<SealReflectionScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.twilightPurple,
-      shape: const RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
+                Text(
                   "Select Chapter",
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -164,15 +165,17 @@ class _SealReflectionScreenState extends State<SealReflectionScreen> {
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 16),
+
+                SizedBox(height: 16),
+
                 Flexible(
                   child: _isLoadingChapters
-                      ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                      ? Center(child: CircularProgressIndicator(color: Colors.white))
                       : ListView(
                     shrinkWrap: true,
                     children: [
                       ListTile(
-                        title: const Text(
+                        title: Text(
                           "No Chapter",
                           style: TextStyle(
                             fontSize: 16,
@@ -180,7 +183,7 @@ class _SealReflectionScreenState extends State<SealReflectionScreen> {
                           ),
                         ),
                         trailing: _selectedChapterId == null
-                            ? const Icon(Icons.check_rounded, color: Colors.white)
+                            ? Icon(Icons.check_rounded, color: Colors.white)
                             : null,
                         onTap: () {
                           setState(() {
@@ -195,13 +198,13 @@ class _SealReflectionScreenState extends State<SealReflectionScreen> {
                         return ListTile(
                           title: Text(
                             chapterTitle,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               color: Colors.white,
                             ),
                           ),
                           trailing: _selectedChapterId == chapterId
-                              ? const Icon(Icons.check_rounded, color: Colors.white)
+                              ? Icon(Icons.check_rounded, color: Colors.white)
                               : null,
                           onTap: () {
                             setState(() {
@@ -245,7 +248,7 @@ class _SealReflectionScreenState extends State<SealReflectionScreen> {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to seal and send reflection forward.")),
+          SnackBar(content: Text("Failed to seal and send reflection forward.")),
         );
       }
     } catch (_) {
@@ -253,7 +256,7 @@ class _SealReflectionScreenState extends State<SealReflectionScreen> {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Connection error.")),
+        SnackBar(content: Text("Connection error.")),
       );
     }
   }
@@ -276,19 +279,21 @@ class _SealReflectionScreenState extends State<SealReflectionScreen> {
       backgroundColor: Colors.transparent,
       body: AppBackground(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                  child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: Colors.black87),
+                  padding: EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                  child: Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: Colors.black87),
                 ),
               ),
-              const SizedBox(height: 24),
+
+              SizedBox(height: 24),
+
               Text(
                 "Seal your reflection",
                 style: GoogleFonts.cormorantGaramond(
@@ -297,14 +302,20 @@ class _SealReflectionScreenState extends State<SealReflectionScreen> {
                   color: Colors.black87,
                 ),
               ),
-              const SizedBox(height: 6),
-              const Text("Send this reflection forward as a brand new capsule into your future.", style: TextStyle(fontSize: 14, color: Colors.black54)),
-              const SizedBox(height: 32),
-              const Text("Capsule title", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black54)),
-              const SizedBox(height: 8),
+
+              SizedBox(height: 6),
+
+              Text("Send this reflection forward as a brand new capsule into your future.", style: TextStyle(fontSize: 14, color: Colors.black54)),
+
+              SizedBox(height: 32),
+
+              Text("Capsule title", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black54)),
+
+              SizedBox(height: 8),
+
               TextField(
                 controller: _titleController,
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black26),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black26),
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: Colors.white,
@@ -312,13 +323,17 @@ class _SealReflectionScreenState extends State<SealReflectionScreen> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                 ),
               ),
-              const SizedBox(height: 24),
-              const Text("Chapter", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black54)),
-              const SizedBox(height: 8),
+
+              SizedBox(height: 24),
+
+              Text("Chapter", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black54)),
+
+              SizedBox(height: 8),
+
               GestureDetector(
                 onTap: _showChapterBottomSheet,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
@@ -328,20 +343,24 @@ class _SealReflectionScreenState extends State<SealReflectionScreen> {
                     children: [
                       Text(
                         _getSelectedChapterName(),
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black26),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black26),
                       ),
-                      const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.black54),
+                      Icon(Icons.keyboard_arrow_down_rounded, color: Colors.black54),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-              const Text("When should your future self receive this?", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black54)),
-              const SizedBox(height: 8),
+
+              SizedBox(height: 24),
+
+              Text("When should your future self receive this?", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black54)),
+
+              SizedBox(height: 8),
+
               GestureDetector(
                 onTap: () => _selectDate(context),
                 child: Container(
-                  padding: const EdgeInsets.all(18),
+                  padding: EdgeInsets.all(18),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
@@ -352,11 +371,13 @@ class _SealReflectionScreenState extends State<SealReflectionScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text("Custom date", style: TextStyle(color: Colors.black54, fontWeight: FontWeight.bold, fontSize: 15)),
-                            const SizedBox(height: 2),
+                            Text("Custom date", style: TextStyle(color: Colors.black54, fontWeight: FontWeight.bold, fontSize: 15)),
+
+                            SizedBox(height: 2),
+
                             Text(
                               DateFormat('d. MMM yyyy').format(_selectedUnlockDate),
-                              style: const TextStyle(color: Colors.black54, fontSize: 12),
+                              style: TextStyle(color: Colors.black54, fontSize: 12),
                             ),
                           ],
                         ),
@@ -366,7 +387,9 @@ class _SealReflectionScreenState extends State<SealReflectionScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 60),
+
+              SizedBox(height: 60),
+
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -374,13 +397,13 @@ class _SealReflectionScreenState extends State<SealReflectionScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.twilightPurple,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                     elevation: 0,
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text("Seal Capsule", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ? CircularProgressIndicator(color: Colors.white)
+                      : Text("Seal Capsule", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],

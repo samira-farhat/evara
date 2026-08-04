@@ -66,7 +66,8 @@ class HomeDashboardAPIView(APIView):
 
         ready_capsules_count = Capsule.objects.filter(
             user=user,
-            is_delivered=True
+            is_delivered=True,
+            has_been_opened=False
         ).count()
 
 

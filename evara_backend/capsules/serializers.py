@@ -202,4 +202,5 @@ class CapsuleLibrarySerializer(serializers.ModelSerializer):
             "unlock_date",
             "created_at",
             "status",
+            "has_been_opened",
         ]

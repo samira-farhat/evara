@@ -5,13 +5,23 @@ import '../../../../core/app_colors.dart';
 import '../../../../core/api_config.dart';
 import '../../../../core/api_client.dart';
 import '../core/app_background.dart';
+import '../screens/capsule_details_screen.dart';
 import '../screens/chapter_details_screen.dart' hide EtherealStardustPainter;
 import 'create_tab.dart';
 
 class HomeTab extends StatefulWidget {
   final VoidCallback? onViewReadyCapsules;
+  final VoidCallback? onNavigateToLibrary;
+  final VoidCallback? onNavigateToChapters;
+  final bool dismissReadyBanner;
 
-  const HomeTab({Key? key, this.onViewReadyCapsules}) : super(key: key);
+  const HomeTab({
+    Key? key,
+    this.onViewReadyCapsules,
+    this.onNavigateToLibrary,
+    this.onNavigateToChapters,
+    this.dismissReadyBanner = false,
+  }) : super(key: key);
 
   @override
   State<HomeTab> createState() => _HomeTabState();
@@ -205,7 +215,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
                 _buildTimelineWidget(),
 
                 // 2.5 Ready Capsules Card (Appears only if ready_capsules_count > 0)
-                if (_readyCapsulesCount > 0) ...[
+                if (_readyCapsulesCount > 0 && !widget.dismissReadyBanner) ...[
                   SizedBox(height: 24),
                   _buildReadyCapsulesBanner(),
                 ],
@@ -734,7 +744,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
             if (hasCapsules)
               GestureDetector(
                 onTap: () {
-                  // TODO: Navigate to See All Capsules screen
+                  widget.onNavigateToLibrary?.call();
                 },
                 child: Text(
                   "See all",
@@ -837,7 +847,14 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
 
         return GestureDetector(
           onTap: () {
-            // TODO: Navigate to Capsule Details screen
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CapsuleDetailsScreen(
+                  capsuleId: capsule['id'],
+                ),
+              ),
+            );
           },
           child: Container(
             padding: EdgeInsets.all(16),
@@ -946,7 +963,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
             if (hasChapters)
               GestureDetector(
                 onTap: () {
-                  // TODO: Navigate to See All Chapters screen
+                  widget.onNavigateToChapters?.call();
                 },
                 child: Text(
                   "See all",

@@ -67,7 +67,7 @@ class _CreateReflectionScreenState extends State<CreateReflectionScreen> {
   Future<void> _saveReflection({bool sendToFuture = false}) async {
     if (_contentController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter your reflection content.")),
+        SnackBar(content: Text("Please enter your reflection content.")),
       );
       return;
     }
@@ -90,7 +90,6 @@ class _CreateReflectionScreenState extends State<CreateReflectionScreen> {
         final reflectionId = data['id'];
 
         if (sendToFuture) {
-          // Fetch the capsule details to get its chapter ID
           final int? initialChapterId = data['capsule_chapter'];
 
           Navigator.pushReplacement(
@@ -120,7 +119,7 @@ class _CreateReflectionScreenState extends State<CreateReflectionScreen> {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to save reflection.")),
+        SnackBar(content: Text("Failed to save reflection.")),
       );
     }
   }
@@ -135,31 +134,37 @@ class _CreateReflectionScreenState extends State<CreateReflectionScreen> {
             _buildAppBar(),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.all(24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("Reflecting on", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black45)),
-                    const SizedBox(height: 4),
+                    Text("Reflecting on", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black45)),
+
+                    SizedBox(height: 4),
+
                     Row(
                       children: [
                         Expanded(
                           child: TextField(
                             controller: _titleController,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
-                            decoration: const InputDecoration(
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
+                            decoration: InputDecoration(
                               border: UnderlineInputBorder(),
                               isDense: true,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
+
+                        SizedBox(width: 8),
+
                         Icon(Icons.edit_rounded, size: 20, color: AppColors.twilightPurple.withValues(alpha: 0.7)),
                       ],
                     ),
-                    const SizedBox(height: 24),
+
+                    SizedBox(height: 24),
+
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: AppColors.lavender.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(16),
@@ -169,11 +174,13 @@ class _CreateReflectionScreenState extends State<CreateReflectionScreen> {
                         style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.twilightPurple),
                       ),
                     ),
-                    const SizedBox(height: 16),
+
+                    SizedBox(height: 16),
+
                     TextField(
                       controller: _contentController,
                       maxLines: 8,
-                      style: const TextStyle(fontSize: 15, color: Colors.black87),
+                      style: TextStyle(fontSize: 15, color: Colors.black87),
                       decoration: InputDecoration(
                         hintText: "Write your thoughts here...",
                         hintStyle: TextStyle(color: Colors.black.withValues(alpha: 0.4)),
@@ -182,21 +189,25 @@ class _CreateReflectionScreenState extends State<CreateReflectionScreen> {
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
                       ),
                     ),
-                    const SizedBox(height: 20),
+
+                    SizedBox(height: 20),
+
                     OutlinedButton.icon(
                       onPressed: _pickFiles,
-                      icon: const Icon(Icons.attach_file_rounded),
-                      label: const Text("Add Attachments"),
+                      icon: Icon(Icons.attach_file_rounded),
+                      label: Text("Add Attachments"),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.twilightPurple,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                     ),
                     if (_selectedFiles.isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      Text("${_selectedFiles.length} file(s) selected", style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                      SizedBox(height: 10),
+                      Text("${_selectedFiles.length} file(s) selected", style: TextStyle(fontSize: 12, color: Colors.black54)),
                     ],
-                    const SizedBox(height: 40),
+
+                    SizedBox(height: 40),
+
                     Row(
                       children: [
                         Expanded(
@@ -205,24 +216,26 @@ class _CreateReflectionScreenState extends State<CreateReflectionScreen> {
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.twilightPurple,
                               side: BorderSide(color: AppColors.twilightPurple.withValues(alpha: 0.5)),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              padding: EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             ),
-                            child: const Text("Save Reflection", style: TextStyle(fontWeight: FontWeight.bold)),
+                            child: Text("Save Reflection", style: TextStyle(fontWeight: FontWeight.bold)),
                           ),
                         ),
-                        const SizedBox(width: 12),
+
+                        SizedBox(width: 12),
+
                         Expanded(
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : () => _saveReflection(sendToFuture: true),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.twilightPurple,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              padding: EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                               elevation: 0,
                             ),
-                            child: const Text("Save & Send to Future", style: TextStyle(fontWeight: FontWeight.bold)),
+                            child: Text("Save & Send to Future", style: TextStyle(fontWeight: FontWeight.bold)),
                           ),
                         ),
                       ],
@@ -239,19 +252,21 @@ class _CreateReflectionScreenState extends State<CreateReflectionScreen> {
 
   Widget _buildAppBar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-              child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: Colors.black87),
+              padding: EdgeInsets.all(10),
+              decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+              child: Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: Colors.black87),
             ),
           ),
-          const SizedBox(width: 16),
-          const Text("Write Reflection", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87)),
+
+          SizedBox(width: 16),
+
+          Text("Write Reflection", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87)),
         ],
       ),
     );
