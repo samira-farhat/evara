@@ -44,7 +44,6 @@ class Capsule(models.Model):
         related_name="future_capsules"
     )
 
-
     title = models.CharField(
         max_length=255
     )
@@ -131,6 +130,13 @@ class Capsule(models.Model):
     updated_at = models.DateTimeField(
         auto_now=True
     )
+
+    def save(self, *args, **kwargs):
+        if self.capsule_type != "letter":
+            self.recipient_name = None
+            self.recipient_email = None
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title

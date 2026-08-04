@@ -47,6 +47,11 @@ class CapsuleSerializer(serializers.ModelSerializer):
         recipient_name = data.get("recipient_name")
         recipient_email = data.get("recipient_email")
 
+        message = data.get(
+            "message",
+            getattr(self.instance, "message", None)
+        )
+
 
         if capsule_type == "letter":
 
@@ -58,6 +63,11 @@ class CapsuleSerializer(serializers.ModelSerializer):
             if not recipient_email:
                 raise serializers.ValidationError({
                     "recipient_email": "Recipient email is required for letter capsules."
+                })
+
+            if not message or not message.strip():
+                raise serializers.ValidationError({
+                    "message": "Letter capsules must contain a message."
                 })
 
 

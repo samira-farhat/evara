@@ -501,7 +501,8 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
       formattedType = '${rawType[0].toUpperCase()}${rawType.substring(1)} Capsule';
     }
 
-    final message = _capsule?['display_message'] ?? '';
+    // Fixed handling for prediction, accountability, and regular capsules message field
+    final message = _capsule?['message'] ?? _capsule?['display_message'] ?? '';
 
     final createdAtStr = _capsule?['created_at'];
     final createdDateFormatted = createdAtStr != null ? DateFormat('d MMMM yyyy').format(DateTime.parse(createdAtStr)) : '';
@@ -535,7 +536,9 @@ class _CapsuleDetailsScreenState extends State<CapsuleDetailsScreen> {
                 SizedBox(height: 4),
 
                 Text(
-                  "Delivered to you safely from your past self ($createdDateFormatted)",
+                  rawType == 'letter'
+                      ? "Delivered safely from your past self ($createdDateFormatted)"
+                      : "Delivered to you safely from your past self ($createdDateFormatted)",
                   style: TextStyle(fontSize: 12, color: Colors.black.withValues(alpha: 0.5)),
                   textAlign: TextAlign.center,
                 ),

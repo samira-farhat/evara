@@ -672,11 +672,26 @@ class _LibraryTabState extends State<LibraryTab> {
         final parsedDate = DateTime.parse(capsule['unlock_date']);
         dateText = DateFormat('MMM yyyy').format(parsedDate);
 
-        final difference = parsedDate.difference(DateTime.now()).inDays;
-        if (difference > 0) {
-          timeAgoText = '${difference}d';
-        } else {
+        final now = DateTime.now();
+        final difference = parsedDate.difference(now);
+
+        if (difference.isNegative || difference.inSeconds <= 0) {
+          isUnlocked = true;
+          showUnreadDot = isUnlocked && !hasBeenOpened;
           timeAgoText = 'Ready';
+        } else if (difference.inHours < 24) {
+          timeAgoText = 'Soon';
+        } else {
+          final totalDays = difference.inDays;
+          if (totalDays <= 31) {
+            timeAgoText = '${totalDays}d';
+          } else if (totalDays < 365) {
+            final months = (totalDays / 30).round();
+            timeAgoText = '${months > 0 ? months : 1}mo';
+          } else {
+            final years = (totalDays / 365).toStringAsFixed(1);
+            timeAgoText = '${years}y';
+          }
         }
       }
     } catch (_) {
