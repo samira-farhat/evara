@@ -124,6 +124,7 @@ class HomeDashboardAPIView(APIView):
 
                 "capsule_type": capsule.capsule_type,
 
+
                 "unlock_date": capsule.unlock_date,
 
                 "days_remaining":
@@ -193,7 +194,11 @@ class HomeDashboardAPIView(APIView):
 
 
                 "years_span":
-                    years_span
+                    years_span,
+                    
+
+                "created_at":
+                    user.created_at,
 
             },
 

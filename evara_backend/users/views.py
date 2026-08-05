@@ -332,3 +332,200 @@ class ResendOTPView(APIView):
                 },
                 status=404
             )
+
+
+from rest_framework.permissions import IsAuthenticated
+from .serializers import ProfileSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
+from django.db.models import Count, Q
+
+class ProfileView(APIView):
+
+    parser_classes = [
+        MultiPartParser,
+        FormParser
+    ]
+
+    permission_classes = [IsAuthenticated]
+
+
+    def get(self, request):
+
+        user = User.objects.annotate(
+
+        chapters_count=Count(
+            "chapters",
+            distinct=True
+        ),
+
+        capsules_count=Count(
+            "capsules",
+            distinct=True
+        ),
+
+        opened_capsules_count=Count(
+            "capsules",
+            filter=Q(
+                capsules__has_been_opened=True
+            ),
+            distinct=True
+        ),
+
+        reflections_count=Count(
+            "reflections",
+            distinct=True
+        )
+
+    ).get(
+        id=request.user.id
+    )
+
+
+        serializer = ProfileSerializer(
+            user,
+            context={
+                "request": request
+            }
+        )
+
+
+        return Response(serializer.data)
+
+
+
+    def patch(self, request):
+
+        serializer = ProfileSerializer(
+            request.user,
+            data=request.data,
+            partial=True,
+            context={
+                "request": request
+            }
+        )
+
+
+        if serializer.is_valid():
+
+            serializer.save()
+
+            return Response(
+                serializer.data
+            )
+
+
+        return Response(
+            serializer.errors,
+            status=400
+        )
+
+
+class DeleteAccountView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+
+        user = request.user
+
+        user.delete()
+
+        return Response(
+            {
+                "message": "Account deleted successfully."
+            },
+            status=200
+        )
+
+
+class ChangePasswordView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+
+    def post(self, request):
+
+        old_password = request.data.get("old_password")
+        new_password = request.data.get("new_password")
+
+
+        user = request.user
+
+
+        if not old_password or not new_password:
+            return Response(
+                {
+                    "error": "Both passwords are required."
+                },
+                status=400
+            )
+
+
+        if not user.check_password(old_password):
+            return Response(
+                {
+                    "error": "Current password is incorrect."
+                },
+                status=400
+            )
+
+
+        user.set_password(new_password)
+        user.save()
+
+
+        return Response(
+            {
+                "message": "Password changed successfully."
+            },
+            status=200
+        )
+
+
+from .serializers import NotificationSettingsSerializer
+from .models import NotificationSettings
+from rest_framework.permissions import IsAuthenticated
+
+class NotificationSettingsView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+
+    def get(self, request):
+
+        settings, created = NotificationSettings.objects.get_or_create(
+            user=request.user
+        )
+
+        serializer = NotificationSettingsSerializer(settings)
+
+        return Response(serializer.data)
+
+
+
+    def patch(self, request):
+
+        settings, created = NotificationSettings.objects.get_or_create(
+            user=request.user
+        )
+
+        serializer = NotificationSettingsSerializer(
+            settings,
+            data=request.data,
+            partial=True
+        )
+
+
+        if serializer.is_valid():
+
+            serializer.save()
+
+            return Response(
+                serializer.data
+            )
+
+
+        return Response(
+            serializer.errors,
+            status=400
+        )

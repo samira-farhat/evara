@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
-from .models import OTP
+from .models import OTP,  NotificationSettings
 from .utils import create_otp
 from .emails import send_otp_email
 
@@ -138,3 +138,48 @@ class LoginSerializer(TokenObtainPairSerializer):
 
 
         return data
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+
+    chapters_count = serializers.IntegerField(read_only=True)
+
+    capsules_count = serializers.IntegerField(read_only=True)
+
+    opened_capsules_count = serializers.IntegerField(read_only=True)
+
+    reflections_count = serializers.IntegerField(read_only=True)
+
+
+    class Meta:
+
+        model = User
+
+        fields = [
+            "username",
+            "email",
+            "profile_picture",
+            "created_at",
+            "chapters_count",
+            "capsules_count",
+            "opened_capsules_count",
+            "reflections_count",
+        ]
+
+
+        read_only_fields = [
+            "email",
+            "created_at",
+        ]
+
+
+class NotificationSettingsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = NotificationSettings
+
+        fields = [
+            "email_notifications",
+            "push_notifications",
+            "reminders",
+        ]

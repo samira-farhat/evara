@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
 
-    "users",
+    "users.apps.UsersConfig",
     "capsules",
     "chapters",
     "reflections",

@@ -8,6 +8,10 @@ from .views import (
     VerifyResetOTPView,
     ResetPasswordView,
     ResendOTPView,
+    ProfileView,
+    DeleteAccountView,
+    ChangePasswordView,
+    NotificationSettingsView
 )
 
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -50,6 +54,30 @@ urlpatterns = [
         "resend-otp/",
         ResendOTPView.as_view(),
         name="resend-otp",
+    ),
+
+    path(
+        "profile/",
+        ProfileView.as_view(),
+        name="profile"
+    ),
+
+    path(
+        "delete-account/",
+        DeleteAccountView.as_view(),
+        name="delete-account"
+    ),
+
+    path(
+        "change-password/",
+        ChangePasswordView.as_view(),
+        name="change-password"
+    ),
+
+    path(
+        "notification-settings/",
+        NotificationSettingsView.as_view(),
+        name="notification-settings"
     ),
 
     path(

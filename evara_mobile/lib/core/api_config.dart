@@ -62,6 +62,18 @@ class ApiConfig {
   static String get resendOtp =>
       "$auth/resend-otp/";
 
+  static String get profile =>
+      "$auth/profile/";
+
+  static String get deleteAccount =>
+      "$auth/delete-account/";
+
+  static String get changePassword =>
+      "$auth/change-password/";
+
+  static String get notificationSettings =>
+      "$auth/notification-settings/";
+
 
   // Dashboard
 

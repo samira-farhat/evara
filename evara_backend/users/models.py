@@ -81,3 +81,36 @@ class OTP(models.Model):
 
     def __str__(self):
         return self.code
+
+
+class NotificationSettings(models.Model):
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="notification_settings"
+    )
+
+    email_notifications = models.BooleanField(
+        default=True
+    )
+
+    push_notifications = models.BooleanField(
+        default=True
+    )
+
+    reminders = models.BooleanField(
+        default=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+
+    def __str__(self):
+        return f"{self.user.username} notification settings"

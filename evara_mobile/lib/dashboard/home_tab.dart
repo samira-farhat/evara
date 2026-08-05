@@ -41,7 +41,9 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
   int _pastCapsulesCount = 0;
   int _futureCapsulesCount = 0;
   int _readyCapsulesCount = 0;
-  int _yearsSpan = 1;
+  String _createdAt = "";
+
+  //int _yearsSpan = 1;
 
   List<dynamic> _upcomingCapsules = [];
   List<dynamic> _activeChapters = [];
@@ -130,8 +132,9 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
           _pastCapsulesCount = timeline['past_capsules_count'] ?? 0;
           _futureCapsulesCount = timeline['future_capsules_count'] ?? 0;
           _readyCapsulesCount = timeline['ready_capsules_count'] ?? 0;
-          _yearsSpan = timeline['years_span'] ?? 1;
-          if (_yearsSpan < 1) _yearsSpan = 1;
+          _createdAt = timeline['created_at'] ?? "";
+          //_yearsSpan = timeline['years_span'] ?? 1;
+          //if (_yearsSpan < 1) _yearsSpan = 1;
 
           _upcomingCapsules = data['upcoming_capsules'] ?? [];
           _activeChapters = data['active_chapters'] ?? [];
@@ -148,6 +151,23 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
         _errorMessage = "Connection error. Please check your network.";
         _isLoading = false;
       });
+    }
+  }
+
+  String _calculateStorySpan() {
+    if (_createdAt.isEmpty) return '0 years';
+    try {
+      final createdDate = DateTime.parse(_createdAt);
+      final difference = DateTime.now().difference(createdDate);
+      final years = difference.inDays ~/ 365;
+      if (years < 1) {
+        final months = difference.inDays ~/ 30;
+        if (months < 1) return 'less than a month'; // Lowercase 'l'
+        return '$months month${months > 1 ? 's' : ''}';
+      }
+      return '$years year${years > 1 ? 's' : ''}';
+    } catch (e) {
+      return '0 years';
     }
   }
 
@@ -427,7 +447,7 @@ class _HomeTabState extends State<HomeTab> with SingleTickerProviderStateMixin {
               SizedBox(width: 8),
 
               Text(
-                "Your story spans $_yearsSpan ${_yearsSpan == 1 ? 'year' : 'years'}.",
+                "Your story spans ${_calculateStorySpan()}.",
                 style: TextStyle(
                   color: Colors.black.withValues(alpha: 0.5),
                   fontSize: 12,
